@@ -22,6 +22,8 @@ const envSchema = z.object({
   LOG_LEVEL: z.string().default('info'),
   /** Directorul cu interfața construită (web/dist). */
   WEB_DIST: z.string().optional(),
+  /** Directorul cu pluginul WordPress și hook-ul WHMCS (pentru descărcări). */
+  INTEGRATIONS_DIR: z.string().optional(),
   /** Dezactivează programatorul de verificări (util în teste). */
   DISABLE_SCHEDULER: bool,
 });
@@ -40,8 +42,14 @@ export interface Config {
   setupToken: string | undefined;
   logLevel: string;
   webDist: string;
+  integrationsDir: string;
   disableScheduler: boolean;
   version: string;
+}
+
+/** Prima cale care există (rădăcina proiectului sau, în dezvoltare, directorul server/); altfel prima. */
+function firstExisting(...paths: string[]): string {
+  return paths.find((p) => existsSync(p)) ?? paths[0]!;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -92,7 +100,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     demoMode: e.DEMO_MODE,
     setupToken: e.SETUP_TOKEN,
     logLevel: e.LOG_LEVEL,
-    webDist: resolve(e.WEB_DIST ?? join(process.cwd(), 'web', 'dist')),
+    webDist: resolve(e.WEB_DIST ?? firstExisting(join(process.cwd(), 'web', 'dist'), join(process.cwd(), '..', 'web', 'dist'))),
+    integrationsDir: resolve(e.INTEGRATIONS_DIR ?? firstExisting(join(process.cwd(), 'integrations'), join(process.cwd(), '..', 'integrations'))),
     disableScheduler: e.DISABLE_SCHEDULER,
     version: process.env.DATIX_VERSION ?? '1.0.0',
   };

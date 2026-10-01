@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Teste (inclusiv compatibilitatea semnăturilor cu PHP)
+        run: npm test
+      - run: npm run build
+      - name: PHP lint (plugin WordPress + hook WHMCS)
+        run: npm run php:lint
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construiește imaginea Docker
+        run: docker build -t datix-ai:ci .
+      - name: Pornește containerul și verifică
+        run: |
+          docker run -d --name smoke -p 3000:3000 \
+            -e APP_URL=http://localhost:3000 \
+            -e APP_SECRET_KEY=ci-0123456789abcdef0123456789abcdef \
+            -e DEMO_MODE=true datix-ai:ci
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/health && break; sleep 2; done
+          curl -sf http://localhost:3000/api/health
+          curl -sf -o /dev/null http://localhost:3000/
+          docker logs smoke | tail -20

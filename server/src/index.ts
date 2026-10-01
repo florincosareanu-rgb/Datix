@@ -28,7 +28,7 @@ async function main() {
   if (setupToken) {
     const line = '='.repeat(72);
     // afișat vizibil o singură dată, pentru prima configurare
-    console.log(`\n${line}\n  PRIMA CONFIGURARE\n  Deschide: ${config.appUrl}/setup\n  Cod de instalare: ${setupToken}\n${line}\n`);
+    console.log(`\n${line}\n  PRIMA CONFIGURARE\n  Deschide: ${config.appUrl}/setup?token=${encodeURIComponent(setupToken)}\n  Cod de instalare: ${setupToken}\n${line}\n`);
   }
 
   const shutdown = async (signal: string) => {

@@ -1,0 +1,47 @@
+# Datix AI: aplicația + Caddy (HTTPS automat cu Let's Encrypt).
+# Pornire: docker compose up -d --build   (sau: sudo bash deploy/install.sh)
+
+services:
+  app:
+    build: .
+    image: datix-ai:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data
+    expose:
+      - "3000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Setează DOMAIN în .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Setează ACME_EMAIL în .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:

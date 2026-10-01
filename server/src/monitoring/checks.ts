@@ -262,6 +262,21 @@ const wpHealthCheck: CheckFn = async (s) => {
   if (health.flags.file_edit === true) findings.push({ key: 'file_edit', severity: 'low', title: 'Editorul de fișiere din wp-admin e activ', recommendation: 'Adaugă define("DISALLOW_FILE_EDIT", true) sau folosește wp_hardening.' });
   if (health.cron.overdue > 5 && !health.cron.disabled) findings.push({ key: 'cron_overdue', severity: 'low', title: `${health.cron.overdue} sarcini WP-Cron întârziate`, recommendation: 'Verifică dacă site-ul are trafic sau configurează un cron real.' });
   if (health.maintenance) findings.push({ key: 'maintenance', severity: 'medium', title: 'Modul mentenanță e activ pe WordPress' });
+  if (health.flags.blog_public === false)
+    findings.push({
+      key: 'noindex',
+      severity: 'high',
+      title: 'WordPress cere motoarelor de căutare să nu indexeze site-ul',
+      details: 'Setări → Citire → „Nu permite motoarelor de căutare să indexeze acest site” este bifat.',
+      recommendation: 'Debifează opțiunea dacă site-ul e live — altfel site-ul dispare treptat din Google.',
+    });
+  if (health.flags.users_can_register === true && health.flags.default_role === 'administrator')
+    findings.push({
+      key: 'register_as_admin',
+      severity: 'critical',
+      title: 'Oricine se poate înregistra pe WordPress direct ca administrator',
+      recommendation: 'Setări → Generale: debifează „Oricine se poate înregistra” sau schimbă rolul implicit în „Abonat”. Verifică apoi lista de administratori.',
+    });
   // administratori noi = semnal de alarmă major
   if (admins) {
     const prev = lastSnapshot<Array<{ login: string }>>(s, 'wp_admins', 'wordpress');

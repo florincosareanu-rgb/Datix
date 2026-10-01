@@ -329,7 +329,10 @@ Investighează, apoi apelează submit_ticket_analysis.`;
       return;
     }
 
-    const escalated = mode === 'auto' && reasons.size > 0;
+    // bani, anulări, modificări de cont și reclamații sunt semnalate ca „necesită atenția ta” în orice mod
+    // (ciorna rămâne disponibilă); în modul Automat, orice motiv oprește trimiterea
+    const mandatory = (['money', 'cancellation', 'account_change', 'complaint_legal'] as const).some((r) => reasons.has(r));
+    const escalated = mandatory || (mode === 'auto' && reasons.size > 0);
     this.update(id, { status: escalated ? 'escalated' : 'draft_ready' });
     if (st.tickets.addInternalNote && escalated) {
       await w.addTicketNote({ ticketId: ticket.id, message: `🤖 ${st.general.agentName} — necesită răspuns uman.\n\n${analysisText}` }).catch(() => undefined);

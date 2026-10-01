@@ -1,0 +1,23 @@
+# Caddy obține și reînnoiește automat certificatul HTTPS pentru domeniul aplicației.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy app:3000 {
+		# răspunsurile agentului vin în timp real (SSE): fără buffer
+		flush_interval -1
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

@@ -94,9 +94,12 @@ select {
   font-size: 16px;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+/* în stratul „base”, ca utilitarele (ex. outline-none la compunerea mesajului) să-l poată suprascrie */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }
 
 .safe-top {
