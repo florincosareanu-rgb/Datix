@@ -37,11 +37,11 @@ export function ConversationList({ onNavigate }: { onNavigate?: () => void }) {
         <Link
           href="/"
           onClick={onNavigate}
-          className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-sm font-medium hover:bg-surface-2"
+          className="pressable flex h-11 items-center justify-center gap-2 rounded-full bg-ink px-4 text-[15px] font-medium text-page hover:opacity-90"
         >
-          <MessageSquarePlus className="size-4" /> Conversație nouă
+          <MessageSquarePlus className="size-[18px]" aria-hidden /> Conversație nouă
         </Link>
-        <div className="mt-2 flex gap-1 rounded-xl bg-surface-2 p-1 text-[12.5px]">
+        <div className="mt-3 flex gap-1 rounded-full bg-surface-2 p-1 text-[13px]">
           {(
             [
               ['chat', 'Chat'],
@@ -49,28 +49,34 @@ export function ConversationList({ onNavigate }: { onNavigate?: () => void }) {
               ['ticket', 'Tichete'],
             ] as Array<[Filter, string]>
           ).map(([v, label]) => (
-            <button key={v} onClick={() => setFilter(v)} className={clsx('flex-1 rounded-lg py-1 font-medium', filter === v ? 'bg-surface text-ink shadow-sm' : 'text-ink-3')}>
+            <button key={v} onClick={() => setFilter(v)} className={clsx('pressable h-8 flex-1 rounded-full font-medium pointer-coarse:h-11', filter === v ? 'bg-surface text-ink shadow-[0_1px_3px_rgb(14_17_32/0.12)]' : 'text-ink-2 hover:text-ink')}>
               {label}
             </button>
           ))}
         </div>
         <div className="relative mt-2">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-ink-3" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Caută…" className="h-8 w-full rounded-lg border border-line bg-surface pr-2 pl-8 text-[13px] outline-none focus:border-accent" style={{ fontSize: 13 }} />
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-3" aria-hidden />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Caută în conversații"
+            aria-label="Caută în conversații"
+            className="h-10 w-full rounded-full border border-transparent bg-surface-2 pointer-coarse:h-11 pr-3 pl-10 outline-none transition-colors focus:border-accent focus:bg-surface focus:ring-4 focus:ring-accent/15"
+          />
         </div>
       </div>
       <ul className="scrollbar-thin mt-2 min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-        {data?.length === 0 && <li className="px-3 py-6 text-center text-xs text-ink-3">{filter === 'chat' ? 'Nicio conversație încă.' : 'Nimic aici încă.'}</li>}
+        {data?.length === 0 && <li className="px-3 py-6 text-center text-[13px] text-ink-3">{filter === 'chat' ? 'Nicio conversație încă.' : 'Nimic aici încă.'}</li>}
         {data?.map((c) => (
           <li key={c.id} className="group relative">
             <Link
               href={`/chat/${c.id}`}
               onClick={onNavigate}
-              className={clsx('flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13.5px]', params?.id === c.id ? 'bg-surface-2 text-ink' : 'text-ink-2 hover:bg-surface-2/60')}
+              className={clsx('flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-[14.5px] transition-colors', params?.id === c.id ? 'bg-accent-soft font-medium text-accent-fg' : 'text-ink-2 hover:bg-surface-2 hover:text-ink')}
             >
               {c.kind === 'incident' ? <Siren className="size-3.5 shrink-0 text-ink-3" /> : c.kind === 'ticket' ? <Ticket className="size-3.5 shrink-0 text-ink-3" /> : c.pinned ? <Pin className="size-3.5 shrink-0 text-ink-3" /> : null}
               <span className="min-w-0 flex-1 truncate">{c.title}</span>
-              <span className="shrink-0 text-[11px] text-ink-3 group-hover:hidden">{timeAgo(c.updatedAt).replace('acum ', '')}</span>
+              <span className="shrink-0 text-[12px] text-ink-3 group-hover:hidden">{timeAgo(c.updatedAt).replace('acum ', '')}</span>
             </Link>
             <div className="absolute top-1/2 right-1 hidden -translate-y-1/2 gap-0.5 group-hover:flex">
               <button onClick={() => pin.mutate(c)} className="rounded-md p-1 text-ink-3 hover:bg-surface-3 hover:text-ink" aria-label={c.pinned ? 'Anulează fixarea' : 'Fixează'}>

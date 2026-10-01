@@ -4,6 +4,7 @@ import { Fingerprint, KeyRound } from 'lucide-react';
 import { api, errorText } from '../lib/api';
 import { loginWithPasskey, passkeysSupported } from '../lib/webauthn';
 import { Button, Field, Input, Notice } from '../components/ui';
+import { DaxOrb } from '../components/brand';
 
 export function LoginPage() {
   const qc = useQueryClient();
@@ -34,14 +35,14 @@ export function LoginPage() {
   };
 
   return (
-    <div className="safe-top safe-bottom flex min-h-full items-center justify-center bg-page px-4 py-10">
-      <div className="w-full max-w-sm">
+    <div className="aurora safe-top safe-bottom flex min-h-full items-center justify-center bg-page px-4 py-10">
+      <div className="enter w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <img src="/icons/favicon.svg" alt="" className="mb-4 size-16 rounded-2xl shadow-sm" />
-          <h1 className="text-2xl font-semibold tracking-tight">DAX</h1>
-          <p className="mt-1 text-sm text-ink-2">Agentul de operațiuni pentru datix.ro și my.datix.ro</p>
+          <DaxOrb size={68} glow className="mb-6" />
+          <h1 className="font-display text-[34px] leading-none font-semibold tracking-tight">DAX</h1>
+          <p className="mt-2 text-[15px] text-ink-2">Agentul de operațiuni pentru datix.ro și my.datix.ro</p>
         </div>
-        <div className="rounded-3xl border border-line bg-surface p-5 shadow-sm">
+        <div className="glass float-shadow rounded-[28px] border border-line/80 p-6">
           {mode === 'passkey' ? (
             <div className="space-y-3">
               <Button variant="primary" size="lg" className="w-full" onClick={passkey} loading={busy} icon={<Fingerprint className="size-5" />}>

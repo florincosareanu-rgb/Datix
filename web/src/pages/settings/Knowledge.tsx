@@ -4,7 +4,7 @@ import { BookOpen, Brain, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, errorText } from '../../lib/api';
 import { useToast } from '../../lib/toast';
 import { dateTime } from '../../lib/format';
-import { Badge, Button, Card, CardHeader, EmptyState, Field, Input, Modal, Textarea } from '../../components/ui';
+import { Badge, Button, Card, CardHeader, EmptyState, Field, IconButton, Input, Modal, Textarea } from '../../components/ui';
 
 interface KbDoc {
   id: string;
@@ -137,12 +137,12 @@ export function KnowledgeTab() {
                     <span>actualizat {dateTime(d.updatedAt)}</span>
                   </div>
                 </div>
-                <button className="rounded-lg p-2 text-ink-3 hover:bg-surface-3 hover:text-ink" aria-label="Editează" onClick={() => setEditing(d)}>
-                  <Pencil className="size-4" />
-                </button>
-                <button className="rounded-lg p-2 text-ink-3 hover:bg-surface-3 hover:text-critical-ink" aria-label="Șterge" onClick={() => confirm(`Ștergi „${d.title}”?`) && delDoc.mutate(d.id)}>
-                  <Trash2 className="size-4" />
-                </button>
+                <IconButton label="Editează" className="text-ink-3" onClick={() => setEditing(d)}>
+                  <Pencil className="size-[18px]" />
+                </IconButton>
+                <IconButton label="Șterge" className="text-ink-3 hover:text-critical-ink" onClick={() => confirm(`Ștergi „${d.title}”?`) && delDoc.mutate(d.id)}>
+                  <Trash2 className="size-[18px]" />
+                </IconButton>
               </li>
             ))}
           </ul>
@@ -161,9 +161,9 @@ export function KnowledgeTab() {
                   <div className="text-sm">{m.content}</div>
                   <div className="text-xs text-ink-3">{dateTime(m.createdAt)}</div>
                 </div>
-                <button className="rounded-lg p-2 text-ink-3 hover:bg-surface-3 hover:text-critical-ink" aria-label="Șterge" onClick={() => delMem.mutate(m.id)}>
-                  <Trash2 className="size-4" />
-                </button>
+                <IconButton label="Șterge" className="-mt-1.5 text-ink-3 hover:text-critical-ink" onClick={() => delMem.mutate(m.id)}>
+                  <Trash2 className="size-[18px]" />
+                </IconButton>
               </li>
             ))}
           </ul>

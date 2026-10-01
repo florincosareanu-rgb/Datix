@@ -58,7 +58,7 @@ export function NotificationsPanel({ open, onClose }: { open: boolean; onClose: 
           {data.items.map((n) => (
             <li key={n.id}>
               <button
-                className={clsx('flex w-full gap-3 rounded-xl px-2 py-2.5 text-left hover:bg-surface-2', n.readAt && 'opacity-65')}
+                className="pressable flex w-full gap-3 rounded-2xl px-3 py-3 text-left hover:bg-surface-2"
                 onClick={() => {
                   if (!n.readAt) markRead.mutate(n.id);
                   if (n.url) {
@@ -67,11 +67,14 @@ export function NotificationsPanel({ open, onClose }: { open: boolean; onClose: 
                   }
                 }}
               >
-                <span className={clsx('mt-1.5 size-2 shrink-0 rounded-full', n.readAt ? 'bg-transparent' : DOT[n.priority])} />
+                <span className={clsx('mt-2 size-2 shrink-0 rounded-full', n.readAt ? 'bg-transparent' : DOT[n.priority])} aria-hidden />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{n.title}</span>
-                  <span className="mt-0.5 block text-[13px] text-ink-2">{n.body}</span>
-                  <span className="mt-0.5 block text-xs text-ink-3">{timeAgo(n.at)}</span>
+                  <span className={clsx('block text-[15px]', n.readAt ? 'font-normal text-ink-2' : 'font-semibold text-ink')}>
+                    {n.title}
+                    {!n.readAt && <span className="sr-only"> (necitită)</span>}
+                  </span>
+                  <span className="mt-0.5 block text-[14px] text-ink-2">{n.body}</span>
+                  <span className="mt-1 block text-[12.5px] text-ink-3">{timeAgo(n.at)}</span>
                 </span>
               </button>
             </li>

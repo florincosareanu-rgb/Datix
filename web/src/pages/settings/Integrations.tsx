@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { Check, Cloud, Copy, Download, Eye, Gauge, Layers, RefreshCw, Server, Store, Ticket } from 'lucide-react';
+import { BookOpen, Check, Cloud, Copy, Download, Eye, Gauge, Layers, RefreshCw, Server, Store, Ticket } from 'lucide-react';
 import type { AppSettings, SettingsResponseDTO } from '@datix/shared';
 import { api, errorText } from '../../lib/api';
 import { useToast } from '../../lib/toast';
@@ -100,7 +100,8 @@ function IntegrationCard<K extends IntKey>({
         <div className={clsx('mt-2', !draft.enabled && 'opacity-60')}>{children}</div>
         <IntegrationTest integration={k} />
         {guide && (
-          <a href={`${GUIDE}#${guide}`} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-ink-3 underline">
+          <a href={`${GUIDE}#${guide}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-[14px] font-medium text-accent-fg hover:underline">
+            <BookOpen className="size-4" aria-hidden />
             Ghid pas cu pas
           </a>
         )}
@@ -113,11 +114,11 @@ function CopyLine({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <Field label={label}>
-      <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 py-2">
-        <code className="min-w-0 flex-1 truncate font-mono text-xs">{value}</code>
+      <div className="flex min-h-12 items-center gap-2 rounded-2xl bg-surface-2 py-0.5 pr-0.5 pl-4">
+        <code className="min-w-0 flex-1 truncate font-mono text-[13px]">{value}</code>
         <button
           type="button"
-          className="text-ink-3 hover:text-ink"
+          className="pressable flex size-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-surface-3 hover:text-ink"
           aria-label="Copiază"
           onClick={() => {
             void navigator.clipboard?.writeText(value);
@@ -125,7 +126,7 @@ function CopyLine({ label, value }: { label: string; value: string }) {
             setTimeout(() => setCopied(false), 1500);
           }}
         >
-          {copied ? <Check className="size-4 text-good" /> : <Copy className="size-4" />}
+          {copied ? <Check className="size-[18px] text-good-ink" /> : <Copy className="size-[18px]" />}
         </button>
       </div>
     </Field>

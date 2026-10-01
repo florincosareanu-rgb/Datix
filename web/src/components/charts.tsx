@@ -35,7 +35,7 @@ function niceTicks(max: number, count = 4): number[] {
 function Tooltip({ x, y, width, children }: { x: number; y: number; width: number; children: ReactNode }) {
   const left = Math.max(0, Math.min(x - 90, width - 180));
   return (
-    <div className="pointer-events-none absolute z-10 w-[180px] rounded-xl border border-line bg-surface px-3 py-2 text-xs shadow-lg" style={{ left, top: Math.max(0, y) }}>
+    <div className="glass float-shadow pointer-events-none absolute z-10 w-[180px] rounded-2xl border border-line/80 px-3 py-2.5 text-[12.5px]" style={{ left, top: Math.max(0, y) }} role="tooltip">
       {children}
     </div>
   );
@@ -161,7 +161,7 @@ export function LatencyChart({ points, height = 180 }: { points: Array<{ at: num
         {ticks.map((t) => (
           <g key={t}>
             <line x1={pad.l} x2={width - pad.r} y1={y(t)} y2={y(t)} stroke="var(--color-chart-grid)" strokeWidth={1} />
-            <text x={pad.l - 6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="tabular fill-ink-3 text-[10.5px]">
+            <text x={pad.l - 6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="tabular fill-ink-3 text-[11.5px]">
               {t >= 1000 ? `${t / 1000}s` : `${t}ms`}
             </text>
           </g>
@@ -173,10 +173,10 @@ export function LatencyChart({ points, height = 180 }: { points: Array<{ at: num
         {points.map((p, i) =>
           p.status === 'down' ? <rect key={i} x={x(p.at) - 1.5} y={pad.t + ih - 4} width={3} height={4} rx={1} fill="var(--color-critical)" /> : null,
         )}
-        <text x={pad.l} y={height - 4} className="fill-ink-3 text-[10.5px]">
+        <text x={pad.l} y={height - 4} className="fill-ink-3 text-[11.5px]">
           {dateTime(t0)}
         </text>
-        <text x={width - pad.r} y={height - 4} textAnchor="end" className="fill-ink-3 text-[10.5px]">
+        <text x={width - pad.r} y={height - 4} textAnchor="end" className="fill-ink-3 text-[11.5px]">
           {dateTime(t1)}
         </text>
         {hp && hp.ms != null && (
@@ -231,7 +231,7 @@ export function ColumnChart({ data, height = 200, format }: { data: Array<{ labe
         {ticks.map((t) => (
           <g key={t}>
             <line x1={pad.l} x2={width - pad.r} y1={y(t)} y2={y(t)} stroke="var(--color-chart-grid)" strokeWidth={1} />
-            <text x={pad.l - 6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="tabular fill-ink-3 text-[10.5px]">
+            <text x={pad.l - 6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="tabular fill-ink-3 text-[11.5px]">
               {format(t)}
             </text>
           </g>
@@ -242,7 +242,7 @@ export function ColumnChart({ data, height = 200, format }: { data: Array<{ labe
             <g key={i}>
               <path d={colPath(cx, y(d.value), barW)} fill="var(--color-chart-1)" opacity={hover == null || hover === i ? 1 : 0.55} />
               {i % labelEvery === 0 && (
-                <text x={cx} y={height - 6} textAnchor="middle" className="fill-ink-3 text-[10.5px]">
+                <text x={cx} y={height - 6} textAnchor="middle" className="fill-ink-3 text-[11.5px]">
                   {d.label}
                 </text>
               )}
@@ -277,13 +277,17 @@ export function ColumnChart({ data, height = 200, format }: { data: Array<{ labe
 
 export function StatTile({ label, value, sub, tone, icon }: { label: string; value: ReactNode; sub?: ReactNode; tone?: 'good' | 'critical' | 'warning'; icon?: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-line bg-surface p-4">
-      <div className="flex items-center gap-1.5 text-[13px] text-ink-2">
-        {icon}
+    <div className="card-shadow rounded-3xl border border-line/80 bg-surface p-4 sm:p-5">
+      <div className="flex items-center gap-2 text-[13.5px] font-medium text-ink-2">
+        {icon && (
+          <span className="flex size-7 items-center justify-center rounded-lg bg-surface-2 text-ink-2 [&_svg]:size-4" aria-hidden>
+            {icon}
+          </span>
+        )}
         {label}
       </div>
-      <div className="tabular mt-1.5 text-xl font-semibold tracking-tight sm:text-2xl">{value}</div>
-      {sub && <div className={clsx('mt-0.5 text-xs', tone === 'good' ? 'text-good-ink' : tone === 'critical' ? 'text-critical-ink' : tone === 'warning' ? 'text-warning-ink' : 'text-ink-3')}>{sub}</div>}
+      <div className="tabular mt-2 font-display text-[24px] leading-tight font-semibold tracking-tight sm:text-[28px]">{value}</div>
+      {sub && <div className={clsx('mt-1 text-[13px]', tone === 'good' ? 'text-good-ink' : tone === 'critical' ? 'text-critical-ink' : tone === 'warning' ? 'text-warning-ink' : 'text-ink-3')}>{sub}</div>}
     </div>
   );
 }
@@ -296,14 +300,14 @@ export function Meter({ label, valuePct, detail }: { label: string; valuePct: nu
   const track = tone === 'critical' ? 'bg-critical-soft' : tone === 'warning' ? 'bg-warning-soft' : 'bg-accent-soft';
   return (
     <div>
-      <div className="mb-1 flex items-baseline justify-between text-sm">
+      <div className="mb-2 flex items-baseline justify-between text-[14px]">
         <span className="text-ink-2">{label}</span>
-        <span className="font-semibold">{valuePct == null ? '—' : `${valuePct.toFixed(1).replace('.', ',')}%`}</span>
+        <span className="tabular font-semibold">{valuePct == null ? '—' : `${valuePct.toFixed(1).replace('.', ',')}%`}</span>
       </div>
-      <div className={clsx('h-2 overflow-hidden rounded-full', track)}>
+      <div className={clsx('h-2.5 overflow-hidden rounded-full', track)} role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={valuePct ?? undefined}>
         <div className={clsx('h-full rounded-full', fill)} style={{ width: `${Math.min(100, v)}%` }} />
       </div>
-      {detail && <div className="mt-1 text-xs text-ink-3">{detail}</div>}
+      {detail && <div className="mt-1.5 text-[13px] text-ink-3">{detail}</div>}
     </div>
   );
 }

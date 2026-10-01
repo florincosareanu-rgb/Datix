@@ -64,3 +64,4 @@ npm run php:lint    # verifică sintaxa pluginului WordPress și a hook-ului WHM
 - [Integrări](docs/INTEGRARI.md)
 - [Securitate și confidențialitate](docs/SECURITATE.md)
 - [Cum funcționează (arhitectură)](docs/ARHITECTURA.md)
+- [Aspectul aplicației (sistemul vizual)](docs/DESIGN.md)

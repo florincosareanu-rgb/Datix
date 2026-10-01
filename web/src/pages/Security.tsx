@@ -9,7 +9,7 @@ import { useToast } from '../lib/toast';
 import { useStatus } from '../layout/Shell';
 import { dateTime, timeAgo } from '../lib/format';
 import { Badge, Button, Card, CardHeader, EmptyState, ErrorBox, Loading, Page, PageHeader, Segmented } from '../components/ui';
-import { SeverityBadge, StatusBadge, severityBar } from '../components/status';
+import { SeverityBadge, StatusBadge, StatusIcon, severityBar } from '../components/status';
 
 const SOURCE_LABEL: Record<string, string> = {
   scan: 'Scanare externă',
@@ -181,11 +181,14 @@ export function SecurityPage() {
           <ul className="px-2 pb-2">
             {checks.map((m) => (
               <li key={m.id}>
-                <Link href={`/monitor/${m.id}`} className="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-surface-2/50">
-                  <StatusBadge status={m.status} className="w-[104px] justify-center" />
+                <Link href={`/monitor/${m.id}`} className="flex min-h-14 items-center gap-3 rounded-2xl px-2 py-2.5 transition-colors hover:bg-surface-2/60 active:bg-surface-2">
+                  <StatusIcon status={m.status} className="sm:hidden" />
+                  <span className="hidden shrink-0 sm:block">
+                    <StatusBadge status={m.status} className="w-[104px] justify-center" />
+                  </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">{m.name}</div>
-                    <div className="truncate text-[12.5px] text-ink-3">{m.lastMessage ?? 'Încă neverificat'}</div>
+                    <div className="line-clamp-2 text-[15px] leading-snug font-medium">{m.name}</div>
+                    <div className="truncate text-[13.5px] text-ink-3">{m.lastMessage ?? 'Încă neverificat'}</div>
                   </div>
                   <span className="hidden shrink-0 text-xs text-ink-3 sm:block">{timeAgo(m.lastCheckAt)}</span>
                 </Link>

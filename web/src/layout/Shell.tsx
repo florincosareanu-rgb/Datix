@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import {
   Activity,
@@ -8,6 +8,7 @@ import {
   Bell,
   CheckSquare,
   FileText,
+  FlaskConical,
   LogOut,
   Menu,
   MessageSquare,
@@ -23,7 +24,7 @@ import { api } from '../lib/api';
 import { useEventsConnected } from '../lib/events';
 import { NotificationsPanel, useUnreadCount } from './Notifications';
 import { ConversationList } from '../pages/ChatSidebar';
-import { useQueryClient } from '@tanstack/react-query';
+import { DaxOrb } from '../components/brand';
 
 interface NavItem {
   href: string;
@@ -54,10 +55,10 @@ function useNav(): NavItem[] {
   ];
 }
 
-function NavBadge({ value, tone = 'accent' }: { value?: number; tone?: 'critical' | 'accent' }) {
+function NavBadge({ value, tone = 'accent', className }: { value?: number; tone?: 'critical' | 'accent'; className?: string }) {
   if (!value) return null;
   return (
-    <span className={clsx('ml-auto min-w-5 rounded-full px-1.5 text-center text-[11px] font-semibold leading-5 text-white', tone === 'critical' ? 'bg-critical' : 'bg-accent')}>
+    <span className={clsx('min-w-5 rounded-full px-1.5 text-center text-[11px] leading-5 font-semibold text-white tabular', tone === 'critical' ? 'bg-critical' : 'bg-accent', className)}>
       {value > 99 ? '99+' : value}
     </span>
   );
@@ -87,125 +88,164 @@ export function Shell({ session, children }: { session: SessionInfoDTO; children
   return (
     <div className="flex h-full">
       {/* ---------------------------------------------------------------- bară laterală (desktop) */}
-      <aside className="hidden w-72 shrink-0 flex-col border-r border-line bg-surface lg:flex">
-        <div className="flex items-center gap-2.5 px-4 pt-4 pb-3">
-          <img src="/icons/favicon.svg" alt="" className="size-8 rounded-lg" />
+      <aside className="glass hidden w-[288px] shrink-0 flex-col border-r border-line/70 lg:flex">
+        <div className="flex items-center gap-3 px-5 pt-5 pb-4">
+          <DaxOrb size={36} />
           <div className="min-w-0">
-            <div className="font-semibold leading-tight">{session.agentName}</div>
-            <div className="flex items-center gap-1 text-xs text-ink-3">
-              <span className={clsx('size-1.5 rounded-full', connected ? 'bg-good' : 'bg-ink-3')} />
+            <div className="font-display text-[20px] leading-tight font-semibold tracking-tight">{session.agentName}</div>
+            <div className="flex items-center gap-1.5 text-[12.5px] text-ink-3">
+              <span className={clsx('size-1.5 rounded-full', connected ? 'bg-good shadow-[0_0_0_3px_rgb(12_163_12/0.18)]' : 'bg-ink-3')} aria-hidden />
               {connected ? 'Conectat live' : 'Se reconectează…'}
             </div>
           </div>
-          <button onClick={() => setNotifOpen(true)} className="relative ml-auto rounded-lg p-2 text-ink-2 hover:bg-surface-2" aria-label="Notificări">
+          <button onClick={() => setNotifOpen(true)} className="pressable relative ml-auto flex size-10 items-center justify-center rounded-full text-ink-2 hover:bg-surface-2 hover:text-ink" aria-label={unread ? `Notificări (${unread} necitite)` : 'Notificări'}>
             <Bell className="size-5" />
-            {unread > 0 && <span className="absolute top-1 right-1 size-2 rounded-full bg-critical" />}
+            {unread > 0 && <span className="absolute top-2 right-2 size-2 rounded-full bg-critical ring-2 ring-surface" aria-hidden />}
           </button>
         </div>
-        <nav className="px-2">
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={clsx('flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors', active(item) ? 'bg-surface-2 text-ink' : 'text-ink-2 hover:bg-surface-2/60 hover:text-ink')}
-            >
-              <item.icon className="size-[18px]" />
-              {item.label}
-              <NavBadge value={item.badge} tone={item.tone} />
-            </Link>
-          ))}
+        <nav className="space-y-0.5 px-3" aria-label="Navigare principală">
+          {nav.map((item) => {
+            const on = active(item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={on ? 'page' : undefined}
+                className={clsx(
+                  'pressable flex h-11 items-center gap-3 rounded-2xl px-3.5 text-[15px] font-medium',
+                  on ? 'bg-accent-soft text-accent-fg' : 'text-ink-2 hover:bg-surface-2 hover:text-ink',
+                )}
+              >
+                <item.icon className="size-[19px]" aria-hidden />
+                {item.label}
+                <NavBadge value={item.badge} tone={item.tone} className="ml-auto" />
+              </Link>
+            );
+          })}
         </nav>
         {isChat ? (
-          <div className="mt-3 flex min-h-0 flex-1 flex-col border-t border-line pt-2">
+          <div className="mt-4 flex min-h-0 flex-1 flex-col border-t border-line/70 pt-3">
             <ConversationList />
           </div>
         ) : (
           <div className="flex-1" />
         )}
-        <div className="border-t border-line p-2">
-          <div className="flex items-center gap-2 rounded-xl px-3 py-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent">{(session.displayName ?? '?').slice(0, 1).toUpperCase()}</div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">{session.displayName}</div>
-              <div className="truncate text-xs text-ink-3">{session.email}</div>
+        <div className="border-t border-line/70 p-3">
+          <div className="flex items-center gap-3 rounded-2xl px-2 py-2">
+            <div className="flex size-9 items-center justify-center rounded-full bg-brand font-display text-[15px] font-semibold text-white" aria-hidden>
+              {(session.displayName ?? '?').slice(0, 1).toUpperCase()}
             </div>
-            <button onClick={logout} className="rounded-lg p-2 text-ink-3 hover:bg-surface-2 hover:text-ink" aria-label="Ieșire" title="Ieșire">
-              <LogOut className="size-4" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[14px] font-medium">{session.displayName}</div>
+              <div className="truncate text-[12.5px] text-ink-3">{session.email}</div>
+            </div>
+            <button onClick={logout} className="pressable flex size-10 items-center justify-center rounded-full text-ink-3 hover:bg-surface-2 hover:text-ink" aria-label="Ieșire" title="Ieșire">
+              <LogOut className="size-[18px]" />
             </button>
           </div>
         </div>
       </aside>
 
       {/* ---------------------------------------------------------------- conținut */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* bară de sus pe mobil */}
-        <header className="safe-top sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur lg:hidden">
-          <div className="flex h-12 items-center gap-1 px-2">
+      <div className="safe-x flex min-w-0 flex-1 flex-col">
+        {/* bară de sus pe telefon */}
+        <header className="glass safe-top sticky top-0 z-30 border-b border-line/60 lg:hidden">
+          <div className="flex h-14 items-center gap-1 px-2">
             {isChat ? (
-              <button onClick={() => setDrawerOpen(true)} className="rounded-lg p-2 text-ink-2" aria-label="Conversații">
-                <Menu className="size-5" />
+              <button onClick={() => setDrawerOpen(true)} className="pressable flex size-11 items-center justify-center rounded-full text-ink-2" aria-label="Conversații și meniu">
+                <Menu className="size-[22px]" />
               </button>
             ) : (
-              <img src="/icons/favicon.svg" alt="" className="ml-2 size-7 rounded-md" />
+              <span className="flex size-11 items-center justify-center">
+                <DaxOrb size={26} />
+              </span>
             )}
-            <div className="ml-1 flex min-w-0 items-center gap-1.5 font-semibold">
+            <div className="flex min-w-0 items-center gap-1.5 font-display text-[18px] font-semibold tracking-tight">
               {session.agentName}
-              {!connected && <WifiOff className="size-3.5 text-ink-3" aria-label="Reconectare" />}
+              {!connected && <WifiOff className="size-3.5 text-ink-3" aria-label="Se reconectează" />}
             </div>
-            <button onClick={() => setNotifOpen(true)} className="relative ml-auto rounded-lg p-2 text-ink-2" aria-label="Notificări">
-              <Bell className="size-5" />
-              {unread > 0 && <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-critical" />}
+            <button onClick={() => setNotifOpen(true)} className="pressable relative ml-auto flex size-11 items-center justify-center rounded-full text-ink-2" aria-label={unread ? `Notificări (${unread} necitite)` : 'Notificări'}>
+              <Bell className="size-[22px]" />
+              {unread > 0 && <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-critical ring-2 ring-page" aria-hidden />}
             </button>
           </div>
         </header>
 
         {session.demoMode && (
-          <div className="border-b border-warning/40 bg-warning-soft px-4 py-1.5 text-center text-xs text-warning-ink">
-            Mod demo: datele și agentul sunt simulate. Conectează DeepSeek și integrările din <Link href="/setari" className="underline">Setări</Link>.
+          <div className="flex items-center justify-center gap-2 border-b border-warning/30 bg-warning-soft px-4 py-2 text-center text-[13px] text-warning-ink">
+            <FlaskConical className="size-4 shrink-0" aria-hidden />
+            <span>
+              Mod demo: date și agent simulate. Conectează DeepSeek și integrările din{' '}
+              <Link href="/setari" className="font-medium underline underline-offset-2">
+                Setări
+              </Link>
+              .
+            </span>
           </div>
         )}
 
-        <main className={clsx('min-h-0 flex-1', isChat ? 'flex flex-col' : 'overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+72px)] lg:pb-0')}>{children}</main>
+        {/* loc pentru bara de jos plutitoare; scroll-padding ține elementul focalizat deasupra ei */}
+        <main
+          className={clsx(
+            'aurora min-h-0 flex-1',
+            isChat
+              ? 'flex flex-col'
+              : 'overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+104px)] scroll-pb-[calc(env(safe-area-inset-bottom)+104px)] short:pb-[calc(env(safe-area-inset-bottom)+80px)] short:scroll-pb-[calc(env(safe-area-inset-bottom)+80px)] lg:pb-0 lg:scroll-pb-0',
+          )}
+        >
+          {children}
+        </main>
 
-        {/* bara de navigare de jos pe mobil */}
+        {/* bara de navigare de jos pe telefon (plutitoare, din sticlă) */}
         {!isChat && (
-          <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur lg:hidden">
-            <div className="grid grid-cols-5">
-              {mobileTabs.map((item) => (
-                <Link key={item.href} href={item.href} className={clsx('relative flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-[11px] font-medium', active(item) ? 'text-accent' : 'text-ink-3')}>
-                  <item.icon className="size-[22px]" />
+          <nav
+            className="glass glass-line float-shadow fixed z-30 rounded-[28px] lg:hidden"
+            style={{ bottom: 'max(env(safe-area-inset-bottom), 12px)', left: 'max(env(safe-area-inset-left), 12px)', right: 'max(env(safe-area-inset-right), 12px)' }}
+            aria-label="Navigare principală"
+          >
+            <div className="grid grid-cols-5 px-1.5 py-1.5">
+              {[...mobileTabs.map((t) => ({ ...t, isActive: active(t) })), { href: '/mai-mult', label: 'Mai mult', icon: MoreHorizontal, badge: moreBadge || undefined, tone: 'critical' as const, isActive: moreActive }].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={item.isActive ? 'page' : undefined}
+                  className={clsx(
+                    'pressable relative flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-[22px] text-[11px] font-medium short:min-h-11 short:flex-row short:gap-2 short:text-[13px]',
+                    item.isActive ? 'text-accent-fg short:bg-accent-soft' : 'text-ink-3',
+                  )}
+                >
+                  <span className={clsx('flex h-7 w-12 items-center justify-center rounded-full transition-colors duration-200 short:w-auto', item.isActive && 'bg-accent-soft short:bg-transparent')}>
+                    <item.icon className="size-[21px]" aria-hidden />
+                  </span>
                   {item.label}
-                  {item.badge ? <span className={clsx('absolute top-1 left-1/2 ml-2 min-w-4 rounded-full px-1 text-[10px] leading-4 text-white', item.tone === 'critical' ? 'bg-critical' : 'bg-accent')}>{item.badge}</span> : null}
+                  {item.badge ? <NavBadge value={item.badge} tone={item.tone} className="absolute top-0.5 left-1/2 ml-2 min-w-[18px] text-[10px] leading-[18px] short:static short:ml-0" /> : null}
                 </Link>
               ))}
-              <Link href="/mai-mult" className={clsx('relative flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-[11px] font-medium', moreActive ? 'text-accent' : 'text-ink-3')}>
-                <MoreHorizontal className="size-[22px]" />
-                Mai mult
-                {moreBadge ? <span className="absolute top-1 left-1/2 ml-2 min-w-4 rounded-full bg-critical px-1 text-[10px] leading-4 text-white">{moreBadge}</span> : null}
-              </Link>
             </div>
           </nav>
         )}
       </div>
 
-      {/* sertar cu conversații (mobil) */}
+      {/* sertar cu conversații (telefon) */}
       {drawerOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
-          <div className="safe-top safe-bottom absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-surface shadow-2xl">
-            <div className="flex items-center gap-2 px-4 py-3">
-              <img src="/icons/favicon.svg" alt="" className="size-7 rounded-md" />
-              <span className="font-semibold">{session.agentName}</span>
+          <div className="absolute inset-0 bg-[rgb(10_11_18/0.45)] backdrop-blur-[3px]" onClick={() => setDrawerOpen(false)} />
+          <div className="safe-top safe-bottom enter absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col border-r border-line bg-surface pl-[env(safe-area-inset-left)] float-shadow">
+            <div className="flex items-center gap-3 px-5 py-4">
+              <DaxOrb size={30} />
+              <span className="font-display text-[19px] font-semibold">{session.agentName}</span>
             </div>
-            <nav className="grid grid-cols-4 gap-1 border-b border-line px-2 pb-2">
+            <nav className="grid grid-cols-4 gap-1 border-b border-line px-3 pb-3" aria-label="Secțiuni">
               {nav
                 .filter((n) => n.href !== '/')
                 .slice(0, 8)
                 .map((item) => (
-                  <Link key={item.href} href={item.href} onClick={() => setDrawerOpen(false)} className="relative flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] text-ink-2 hover:bg-surface-2">
-                    <item.icon className="size-5" />
+                  <Link key={item.href} href={item.href} onClick={() => setDrawerOpen(false)} className="pressable relative flex flex-col items-center gap-1.5 rounded-2xl py-2.5 text-[11.5px] font-medium text-ink-2 hover:bg-surface-2">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-surface-2 text-ink-2">
+                      <item.icon className="size-5" aria-hidden />
+                    </span>
                     {item.label}
-                    {item.badge ? <span className="absolute top-1 right-2 min-w-4 rounded-full bg-critical px-1 text-[10px] leading-4 text-white">{item.badge}</span> : null}
+                    {item.badge ? <NavBadge value={item.badge} tone={item.tone} className="absolute top-1 right-2 min-w-[18px] text-[10px] leading-[18px]" /> : null}
                   </Link>
                 ))}
             </nav>

@@ -3,7 +3,7 @@
 
 export type ThemePref = 'system' | 'light' | 'dark';
 
-const PAGE_COLOR = { light: '#f9f9f7', dark: '#121211' } as const;
+const PAGE_COLOR = { light: '#f5f6fa', dark: '#0a0b12' } as const;
 
 export function getThemePref(): ThemePref {
   try {

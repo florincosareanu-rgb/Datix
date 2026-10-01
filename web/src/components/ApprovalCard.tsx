@@ -27,18 +27,20 @@ export function ApprovalCard({ approval, onDecided, compact }: { approval: Appro
   };
 
   return (
-    <div className={clsx('rounded-2xl border p-3.5', pending ? 'border-warning/50 bg-warning-soft/60' : 'border-line bg-surface-2/60')}>
+    <div className={clsx('card-shadow rounded-3xl border p-4', pending ? 'border-warning/45 bg-warning-soft' : 'border-line/80 bg-surface')}>
       <div className="flex flex-wrap items-center gap-2">
-        <ShieldAlert className="size-4 text-warning-ink" />
-        <span className="text-sm font-semibold">{pending ? 'Agentul cere aprobarea ta' : approval.toolLabel}</span>
+        <span className={clsx('flex size-8 items-center justify-center rounded-xl', pending ? 'bg-warning/20 text-warning-ink' : 'bg-surface-2 text-ink-2')} aria-hidden>
+          <ShieldAlert className="size-[18px]" />
+        </span>
+        <span className="font-display text-[16px] font-semibold">{pending ? 'DAX cere aprobarea ta' : approval.toolLabel}</span>
         <Badge tone={approval.risk === 'irreversible' ? 'critical' : approval.risk === 'customer_message' ? 'accent' : 'warning'}>{RISK_LABEL[approval.risk]}</Badge>
         {!pending && <Badge tone={approval.status === 'executed' || approval.status === 'approved' ? 'good' : 'neutral'}>{APPROVAL_STATUS_LABEL[approval.status]}</Badge>}
         {!compact && <span className="ml-auto text-xs text-ink-3">{timeAgo(approval.createdAt)}</span>}
       </div>
-      <p className="mt-2 text-sm whitespace-pre-wrap text-ink">{approval.summary}</p>
-      {approval.result && !pending && <p className="mt-1.5 line-clamp-3 text-xs text-ink-3">{approval.result}</p>}
+      <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap text-ink">{approval.summary}</p>
+      {approval.result && !pending && <p className="mt-2 line-clamp-3 text-[13px] text-ink-3">{approval.result}</p>}
       {pending && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="primary" size="sm" loading={busy === 'approve'} disabled={!!busy} onClick={() => decide('approve')} icon={approval.requiresStepUp ? <Fingerprint className="size-4" /> : undefined}>
             {approval.requiresStepUp ? 'Aprobă cu Face ID' : 'Aprobă'}
           </Button>

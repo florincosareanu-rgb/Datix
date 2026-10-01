@@ -7,7 +7,7 @@
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
     if (pref !== 'system') {
       var metas = document.querySelectorAll('meta[name="theme-color"]');
-      for (var i = 0; i < metas.length; i++) metas[i].setAttribute('content', dark ? '#121211' : '#f9f9f7');
+      for (var i = 0; i < metas.length; i++) metas[i].setAttribute('content', dark ? '#0a0b12' : '#f5f6fa');
     }
   } catch (e) {
     /* localStorage indisponibil */

@@ -6,7 +6,7 @@ import type { SessionInfoDTO } from '@datix/shared';
 import { api } from '../lib/api';
 import { useStatus } from '../layout/Shell';
 import { getThemePref, setThemePref, type ThemePref } from '../lib/theme';
-import { Card, Page, Segmented } from '../components/ui';
+import { Card, IconTile, Page, Segmented } from '../components/ui';
 
 export function ThemePicker() {
   const [theme, setTheme] = useState<ThemePref>(getThemePref());
@@ -45,31 +45,35 @@ export function MorePage() {
   };
   return (
     <Page>
-      <h1 className="mb-4 text-[22px] font-semibold tracking-tight">Mai mult</h1>
-      <Card className="mb-5 overflow-hidden">
+      <h1 className="mb-6 font-display text-[30px] leading-tight font-semibold tracking-tight">Mai mult</h1>
+      <Card className="enter-stagger mb-6 overflow-hidden">
         {items.map((it) => (
-          <Link key={it.href} href={it.href} className="flex items-center gap-3 border-t border-line px-4 py-3.5 first:border-t-0 active:bg-surface-2">
-            <it.icon className="size-5 text-ink-2" />
-            <span className="flex-1 font-medium">{it.label}</span>
-            {it.badge ? <span className="min-w-5 rounded-full bg-critical px-1.5 text-center text-[11px] font-semibold leading-5 text-white">{it.badge}</span> : null}
-            <ChevronRight className="size-4 text-ink-3" />
+          <Link key={it.href} href={it.href} className="flex min-h-[60px] items-center gap-3.5 border-t border-line/70 px-4 py-2.5 transition-colors first:border-t-0 hover:bg-surface-2/60 active:bg-surface-2">
+            <IconTile>
+              <it.icon />
+            </IconTile>
+            <span className="flex-1 text-[16px] font-medium">{it.label}</span>
+            {it.badge ? <span className="tabular min-w-5 rounded-full bg-critical px-1.5 text-center text-[11px] leading-5 font-semibold text-white">{it.badge}</span> : null}
+            <ChevronRight className="size-[18px] text-ink-3" aria-hidden />
           </Link>
         ))}
       </Card>
-      <Card className="mb-5 p-4">
-        <div className="mb-2 text-sm font-medium">Aspect</div>
+      <Card className="mb-6 p-5">
+        <div className="mb-3 font-display text-[16px] font-semibold">Aspect</div>
         <ThemePicker />
       </Card>
       <Card className="overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3.5">
-          <div className="flex size-9 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{(session?.displayName ?? '?').slice(0, 1).toUpperCase()}</div>
+        <div className="flex items-center gap-3.5 px-4 py-4">
+          <div className="flex size-11 items-center justify-center rounded-full bg-brand font-display text-[17px] font-semibold text-white" aria-hidden>
+            {(session?.displayName ?? '?').slice(0, 1).toUpperCase()}
+          </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate font-medium">{session?.displayName}</div>
-            <div className="truncate text-xs text-ink-3">{session?.email}</div>
+            <div className="truncate text-[16px] font-medium">{session?.displayName}</div>
+            <div className="truncate text-[14px] text-ink-3">{session?.email}</div>
           </div>
         </div>
-        <button onClick={logout} className="flex w-full items-center gap-3 border-t border-line px-4 py-3.5 text-left font-medium text-critical-ink active:bg-surface-2">
-          <LogOut className="size-5" /> Ieșire din cont
+        <button onClick={logout} className="flex min-h-[56px] w-full items-center gap-3 border-t border-line/70 px-4 py-3 text-left text-[16px] font-medium text-critical-ink transition-colors hover:bg-critical-soft/50 active:bg-surface-2">
+          <LogOut className="size-5" aria-hidden /> Ieșire din cont
         </button>
       </Card>
     </Page>

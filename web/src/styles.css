@@ -2,33 +2,76 @@
 
 /* Tema se alege prin atributul data-theme de pe <html> (setat din public/theme.js). */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+/* ecrane scunde (telefon în landscape): navigare compactă */
+@custom-variant short (@media (max-height: 500px));
+
+/* --------------------------------------------------------------- fonturi (găzduite în aplicație, OFL) */
+/* Inter pentru text și cifre, Outfit pentru titluri și marca DAX; latin + latin-ext (ș, ț, ă, â, î). */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/outfit-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/outfit-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 @theme {
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --color-page: #f9f9f7;
+  /* neutre reci, ușor nuanțate spre violet */
+  --color-page: #f5f6fa;
   --color-surface: #ffffff;
-  --color-surface-2: #f4f3ef;
-  --color-surface-3: #ebeae4;
-  --color-ink: #0b0b0b;
-  --color-ink-2: #52514e;
-  --color-ink-3: #898781;
-  --color-line: #e1e0d9;
-  --color-line-strong: #c3c2b7;
+  --color-surface-2: #f0f1f7;
+  --color-surface-3: #e5e7f0;
+  --color-ink: #0e1120;
+  --color-ink-2: #4b5168;
+  --color-ink-3: #656b83;
+  --color-line: #e4e6ef;
+  --color-line-strong: #cdd0de;
 
-  --color-accent: #2a78d6;
-  --color-accent-hover: #256abf;
+  /* accentul AI: violet — „accent” pentru umpleri (butoane, comutatoare), „accent-fg” pentru text și pictograme */
+  --color-accent: #7c3aed;
+  --color-accent-hover: #6d28d9;
   --color-accent-ink: #ffffff;
-  --color-accent-soft: #e8f1fc;
+  --color-accent-fg: #6d28d9;
+  --color-accent-soft: #f1ebfe;
+  --color-accent-2: #06b6d4;
 
-  /* paleta de stare (fixă) — mereu însoțită de pictogramă + text */
+  /* paleta de stare (fixă, separată de accent) — mereu însoțită de pictogramă + text */
   --color-good: #0ca30c;
   --color-good-ink: #006300;
   --color-good-soft: #e9f6e9;
   --color-warning: #fab219;
   --color-warning-ink: #7a5000;
   --color-warning-soft: #fff5de;
+  --color-on-warning: #3d2800; /* pictograme pe fundal bg-warning (la fel în ambele teme) */
   --color-serious: #ec835a;
   --color-serious-ink: #a3401a;
   --color-serious-soft: #fdefe8;
@@ -36,37 +79,59 @@
   --color-critical-ink: #b42323;
   --color-critical-soft: #fbebeb;
 
-  /* grafice */
-  --color-chart-1: #2a78d6;
-  --color-chart-grid: #e1e0d9;
-  --color-chart-axis: #c3c2b7;
+  /* grafice (validate: banda de luminozitate și contrast ≥ 3:1 față de suprafață, în ambele teme) */
+  --color-chart-1: #7c3aed;
+  --color-chart-grid: #e8e9f1;
+  --color-chart-axis: #cdd0de;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-theme='dark'] {
-  --color-page: #121211;
-  --color-surface: #1a1a19;
-  --color-surface-2: #232322;
-  --color-surface-3: #2d2d2b;
-  --color-ink: #ffffff;
-  --color-ink-2: #c3c2b7;
-  --color-ink-3: #8f8d86;
-  --color-line: #2c2c2a;
-  --color-line-strong: #3d3d3a;
-  --color-accent: #3987e5;
-  --color-accent-hover: #5598e7;
-  --color-accent-soft: #1b2a3e;
+  --color-page: #0a0b12;
+  --color-surface: #12141e;
+  --color-surface-2: #1a1d2a;
+  --color-surface-3: #242838;
+  --color-ink: #f3f4fa;
+  --color-ink-2: #b9bed1;
+  --color-ink-3: #8c92a9;
+  --color-line: #232637;
+  --color-line-strong: #31354a;
+  --color-accent: #7c3aed;
+  --color-accent-hover: #6d28d9;
+  --color-accent-fg: #a78bfa;
+  --color-accent-soft: #221a3d;
   --color-good-ink: #3fc23f;
-  --color-good-soft: #142616;
+  --color-good-soft: #132519;
   --color-warning-ink: #fab219;
-  --color-warning-soft: #2c2410;
+  --color-warning-soft: #2b2312;
   --color-serious-ink: #ec835a;
-  --color-serious-soft: #2e1d15;
-  --color-critical-ink: #e66767;
-  --color-critical-soft: #2f1717;
-  --color-chart-1: #3987e5;
-  --color-chart-grid: #2c2c2a;
-  --color-chart-axis: #383835;
+  --color-serious-soft: #2d1c16;
+  --color-critical-ink: #ef6b6b;
+  --color-critical-soft: #2e171a;
+  --color-chart-1: #9f7aea;
+  --color-chart-grid: #1f2232;
+  --color-chart-axis: #31354a;
   color-scheme: dark;
+}
+
+/* --------------------------------------------------------------- umbre și efecte (valori pe temă) */
+:root {
+  --card-shadow: 0 1px 2px rgb(14 17 32 / 0.04), 0 6px 20px -10px rgb(14 17 32 / 0.12);
+  --float-shadow: 0 12px 32px -12px rgb(14 17 32 / 0.25), 0 2px 6px rgb(14 17 32 / 0.05);
+  --glass-bg: rgb(255 255 255 / 0.72);
+  --glass-line: rgb(14 17 32 / 0.07);
+  --aurora-a: rgb(124 58 237 / 0.13);
+  --aurora-b: rgb(6 182 212 / 0.1);
+  --brand-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 48%, #06b6d4 100%);
+}
+[data-theme='dark'] {
+  --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 10px 30px -14px rgb(0 0 0 / 0.7);
+  --float-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --glass-bg: rgb(18 20 30 / 0.72);
+  --glass-line: rgb(255 255 255 / 0.07);
+  --aurora-a: rgb(124 58 237 / 0.22);
+  --aurora-b: rgb(6 182 212 / 0.12);
 }
 
 html {
@@ -82,9 +147,10 @@ body,
 
 body {
   @apply bg-page text-ink font-sans antialiased;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
   overscroll-behavior-y: none;
+  font-feature-settings: 'cv11';
 }
 
 /* iOS: câmpurile sub 16px fac zoom la focus */
@@ -94,12 +160,87 @@ select {
   font-size: 16px;
 }
 
-/* în stratul „base”, ca utilitarele (ex. outline-none la compunerea mesajului) să-l poată suprascrie */
 @layer base {
+  /* în stratul „base”, ca utilitarele (ex. outline-none la compunerea mesajului) să-l poată suprascrie */
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
+  /* pictograme Lucide: aceeași grosime a liniei peste tot */
+  svg.lucide {
+    stroke-width: 1.75;
+  }
+  button:not(:disabled),
+  [role='button'],
+  a[href] {
+    cursor: pointer;
+  }
+}
+
+/* --------------------------------------------------------------- utilitare de design */
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+@utility card-shadow {
+  box-shadow: var(--card-shadow);
+}
+
+@utility float-shadow {
+  box-shadow: var(--float-shadow);
+}
+
+/* sticlă (ca materialele iOS): bare de navigare, compunerea mesajului, foi */
+@utility glass {
+  background-color: var(--glass-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+@utility bg-brand {
+  background-image: var(--brand-gradient);
+}
+
+@utility text-brand {
+  background-image: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* apăsare: feedback vizual fără să miște conținutul din jur (transform nu schimbă layout-ul) */
+@utility pressable {
+  transition:
+    transform 150ms var(--ease-out),
+    background-color 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    color 200ms var(--ease-out),
+    opacity 200ms var(--ease-out);
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+/* fundal ambiental discret (static), în spatele conținutului */
+.aurora {
+  position: relative;
+  isolation: isolate;
+}
+.aurora::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 520px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 60% at 12% 0%, var(--aurora-a), transparent 70%),
+    radial-gradient(45% 50% at 92% 4%, var(--aurora-b), transparent 70%);
+}
+
+.glass-line {
+  box-shadow: 0 0 0 1px var(--glass-line);
 }
 
 .safe-top {
@@ -121,10 +262,90 @@ select {
   scrollbar-width: thin;
   scrollbar-color: var(--color-line-strong) transparent;
 }
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* --------------------------------------------------------------- orbul DAX (identitatea agentului) */
+.dax-orb {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0) 24%),
+    radial-gradient(circle at 72% 76%, #22d3ee 0%, rgb(34 211 238 / 0) 52%),
+    radial-gradient(circle at 26% 72%, #6366f1 0%, rgb(99 102 241 / 0) 58%),
+    radial-gradient(circle at 50% 42%, #8b5cf6 0%, #5b21b6 78%);
+  box-shadow:
+    inset 0 -4px 10px rgb(14 17 32 / 0.28),
+    inset 0 2px 5px rgb(255 255 255 / 0.35);
+}
+.dax-orb-glow {
+  box-shadow:
+    inset 0 -6px 14px rgb(14 17 32 / 0.28),
+    inset 0 2px 6px rgb(255 255 255 / 0.35),
+    0 0 0 8px rgb(124 58 237 / 0.07),
+    0 16px 48px -8px rgb(124 58 237 / 0.55);
+  animation: orb-breathe 6s var(--ease-out) infinite;
+}
+@keyframes orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+.dax-orb-active {
+  animation: orb-hue 2.4s linear infinite;
+}
+@keyframes orb-hue {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* --------------------------------------------------------------- intrări în scenă */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.enter {
+  animation: fade-up 320ms var(--ease-out) both;
+}
+.enter-stagger > * {
+  animation: fade-up 360ms var(--ease-out) both;
+}
+.enter-stagger > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+.enter-stagger > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+.enter-stagger > *:nth-child(4) {
+  animation-delay: 120ms;
+}
+.enter-stagger > *:nth-child(5) {
+  animation-delay: 160ms;
+}
+.enter-stagger > *:nth-child(n + 6) {
+  animation-delay: 200ms;
+}
 
 /* --------------------------------------------------------------- text Markdown al agentului */
 .prose-chat {
   overflow-wrap: anywhere;
+  line-height: 1.65;
 }
 .prose-chat > :first-child {
   margin-top: 0;
@@ -133,30 +354,32 @@ select {
   margin-bottom: 0;
 }
 .prose-chat p {
-  margin: 0.55em 0;
+  margin: 0.6em 0;
 }
 .prose-chat h1,
 .prose-chat h2,
 .prose-chat h3,
 .prose-chat h4 {
-  font-weight: 650;
-  margin: 1.1em 0 0.4em;
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  margin: 1.15em 0 0.4em;
   line-height: 1.3;
 }
 .prose-chat h1 {
-  font-size: 1.25em;
+  font-size: 1.3em;
 }
 .prose-chat h2 {
-  font-size: 1.12em;
+  font-size: 1.15em;
 }
 .prose-chat h3,
 .prose-chat h4 {
-  font-size: 1.02em;
+  font-size: 1.03em;
 }
 .prose-chat ul,
 .prose-chat ol {
   margin: 0.5em 0;
-  padding-left: 1.35em;
+  padding-left: 1.3em;
 }
 .prose-chat ul {
   list-style: disc;
@@ -165,67 +388,75 @@ select {
   list-style: decimal;
 }
 .prose-chat li {
-  margin: 0.2em 0;
+  margin: 0.25em 0;
+}
+.prose-chat li::marker {
+  color: var(--color-ink-3);
 }
 .prose-chat a {
-  color: var(--color-accent);
+  color: var(--color-accent-fg);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in oklab, var(--color-accent-fg) 40%, transparent);
+  text-underline-offset: 3px;
 }
 .prose-chat strong {
-  font-weight: 650;
+  font-weight: 600;
 }
 .prose-chat code {
   font-family: var(--font-mono);
-  font-size: 0.88em;
+  font-size: 0.86em;
   background: var(--color-surface-2);
-  border: 1px solid var(--color-line);
   border-radius: 6px;
-  padding: 0.05em 0.35em;
+  padding: 0.12em 0.4em;
 }
 .prose-chat pre {
   background: var(--color-surface-2);
   border: 1px solid var(--color-line);
-  border-radius: 10px;
-  padding: 0.8em 0.9em;
+  border-radius: 16px;
+  padding: 0.9em 1em;
   overflow-x: auto;
-  margin: 0.7em 0;
-  font-size: 0.86em;
-  line-height: 1.45;
+  margin: 0.8em 0;
+  font-size: 0.85em;
+  line-height: 1.5;
 }
 .prose-chat pre code {
   background: none;
-  border: 0;
   padding: 0;
   font-size: inherit;
 }
 .prose-chat table {
-  border-collapse: collapse;
-  margin: 0.7em 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0.8em 0;
   font-size: 0.92em;
   display: block;
   overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
 }
 .prose-chat th,
 .prose-chat td {
-  border: 1px solid var(--color-line);
-  padding: 0.35em 0.6em;
+  border-bottom: 1px solid var(--color-line);
+  padding: 0.5em 0.75em;
   text-align: left;
+}
+.prose-chat tr:last-child td {
+  border-bottom: 0;
 }
 .prose-chat th {
   background: var(--color-surface-2);
   font-weight: 600;
 }
 .prose-chat blockquote {
-  border-left: 3px solid var(--color-line-strong);
-  padding-left: 0.8em;
+  border-left: 3px solid var(--color-accent);
+  padding-left: 0.9em;
   color: var(--color-ink-2);
-  margin: 0.6em 0;
+  margin: 0.7em 0;
 }
 .prose-chat hr {
   border: 0;
   border-top: 1px solid var(--color-line);
-  margin: 1em 0;
+  margin: 1.1em 0;
 }
 
 @keyframes pulse-dot {
@@ -233,12 +464,15 @@ select {
   80%,
   100% {
     opacity: 0.25;
+    transform: scale(0.85);
   }
   40% {
     opacity: 1;
+    transform: scale(1);
   }
 }
 .typing-dot {
+  display: inline-block;
   animation: pulse-dot 1.2s infinite ease-in-out;
 }
 .typing-dot:nth-child(2) {
@@ -249,8 +483,11 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

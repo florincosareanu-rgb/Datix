@@ -33,7 +33,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               t.tone === 'info' && 'border-line bg-surface',
             )}
           >
-            {t.tone === 'good' ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-good" /> : t.tone === 'critical' ? <XCircle className="mt-0.5 size-4 shrink-0 text-critical" /> : <Info className="mt-0.5 size-4 shrink-0 text-accent" />}
+            {t.tone === 'good' ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-good" /> : t.tone === 'critical' ? <XCircle className="mt-0.5 size-4 shrink-0 text-critical" /> : <Info className="mt-0.5 size-4 shrink-0 text-accent-fg" />}
             <span>{t.text}</span>
           </div>
         ))}

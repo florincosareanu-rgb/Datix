@@ -35,7 +35,7 @@ export function AboutTab() {
             ['ARHITECTURA.md', 'Cum funcționează agentul'],
           ].map(([file, label]) => (
             <li key={file}>
-              <a href={`${DOCS}/${file}`} target="_blank" rel="noreferrer" className="text-accent underline">
+              <a href={`${DOCS}/${file}`} target="_blank" rel="noreferrer" className="text-accent-fg underline">
                 {label}
               </a>
             </li>

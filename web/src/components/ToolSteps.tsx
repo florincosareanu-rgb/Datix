@@ -6,7 +6,7 @@ import type { ToolCallDTO } from '@datix/shared';
 function StepIcon({ status }: { status: ToolCallDTO['status'] }) {
   switch (status) {
     case 'running':
-      return <Loader2 className="size-3.5 animate-spin text-accent" />;
+      return <Loader2 className="size-3.5 animate-spin text-accent-fg" />;
     case 'done':
       return <Check className="size-3.5 text-good" />;
     case 'error':
@@ -34,16 +34,20 @@ export function ToolSteps({ calls, live }: { calls: ToolCallDTO[]; live?: boolea
   const errors = calls.filter((c) => c.status === 'error').length;
   const summary = running ? (calls.find((c) => c.status === 'running')?.label ?? 'Lucrez') + '…' : `${calls.length === 1 ? calls[0]!.label : `Am folosit ${calls.length} unelte`}${errors ? ` · ${errors} cu eroare` : ''}`;
   return (
-    <div className="mb-2.5">
-      <button onClick={() => setOpen((o) => !o)} className="flex max-w-full items-center gap-2 rounded-lg py-1 text-[13px] text-ink-2 hover:text-ink" aria-expanded={open}>
-        {running || live ? <Loader2 className={clsx('size-3.5 shrink-0', running ? 'animate-spin text-accent' : 'text-ink-3')} /> : <Wrench className="size-3.5 shrink-0 text-ink-3" />}
+    <div className="mb-3">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="pressable inline-flex max-w-full items-center gap-2 rounded-full bg-surface-2 py-1.5 pr-3 pl-2.5 text-[13.5px] text-ink-2 hover:bg-surface-3 hover:text-ink"
+        aria-expanded={open}
+      >
+        {running || live ? <Loader2 className={clsx('size-4 shrink-0', running ? 'animate-spin text-accent-fg' : 'text-ink-3')} aria-hidden /> : <Wrench className="size-4 shrink-0 text-ink-3" aria-hidden />}
         <span className="truncate">{summary}</span>
-        <ChevronDown className={clsx('size-3.5 shrink-0 transition-transform', open && 'rotate-180')} />
+        <ChevronDown className={clsx('size-4 shrink-0 transition-transform duration-200', open && 'rotate-180')} aria-hidden />
       </button>
       {open && (
-        <ol className="mt-1 space-y-1 border-l border-line pl-3">
+        <ol className="enter mt-2 space-y-2 rounded-2xl border border-line/80 border-l-[3px] border-l-accent bg-surface/70 px-3.5 py-3">
           {calls.map((c) => (
-            <li key={c.id} className="text-[13px]">
+            <li key={c.id} className="text-[13.5px]">
               <div className="flex items-center gap-2">
                 <StepIcon status={c.status} />
                 <span className="font-medium text-ink">{c.label}</span>

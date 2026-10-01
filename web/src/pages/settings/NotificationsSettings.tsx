@@ -11,19 +11,19 @@ function InstallSteps() {
   return (
     <ol className="space-y-3 text-sm">
       <li className="flex gap-3">
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">1</span>
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-fg">1</span>
         <span>
           Deschide aplicația în <strong>Safari</strong> pe iPhone (iOS 16.4 sau mai nou).
         </span>
       </li>
       <li className="flex gap-3">
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">2</span>
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-fg">2</span>
         <span>
           Apasă <Share className="inline size-4 align-text-bottom" /> <strong>Distribuie</strong>, apoi <SquarePlus className="inline size-4 align-text-bottom" /> <strong>Adaugă la ecranul principal</strong>.
         </span>
       </li>
       <li className="flex gap-3">
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">3</span>
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-fg">3</span>
         <span>
           Deschide <strong>DAX</strong> de pe ecranul principal, intră aici și apasă „Activează notificările”.
         </span>

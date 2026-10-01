@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import clsx from 'clsx';
 import { Link } from 'wouter';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowRight, CheckCircle2, CircleDashed, Play, RefreshCw, Siren, Sparkles, XCircle, Zap } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, CircleDashed, Coins, Play, RefreshCw, ShieldCheck, Siren, Sparkles, XCircle, Zap } from 'lucide-react';
 import { INTEGRATION_LABEL, type IncidentDTO, type MonitorDTO, type SessionInfoDTO, type StatusOverviewDTO } from '@datix/shared';
 import { api, errorText } from '../lib/api';
 import { useStatus } from '../layout/Shell';
 import { useToast } from '../lib/toast';
 import { ms, pct, timeAgo, usd } from '../lib/format';
 import { Badge, Button, Card, CardHeader, ErrorBox, Loading, Page, PageHeader } from '../components/ui';
-import { SeverityBadge, StatusBadge } from '../components/status';
+import { SeverityBadge, StatusBadge, StatusIcon } from '../components/status';
 import { StatTile, UptimeStrip } from '../components/charts';
 
 type BannerState = 'ok' | 'recovered' | 'incident' | 'degraded' | 'down' | 'unknown';
@@ -21,21 +22,30 @@ function bannerState(overall: StatusOverviewDTO['overall'], incidents: IncidentD
   return incidents.length ? 'recovered' : 'ok';
 }
 
-function OverallBanner({ state }: { state: BannerState }) {
-  const map = {
-    ok: { Icon: CheckCircle2, cls: 'border-good/30 bg-good-soft', icon: 'text-good', title: 'Totul funcționează normal', text: 'Site-urile răspund, nu sunt incidente deschise.' },
-    recovered: { Icon: CheckCircle2, cls: 'border-good/30 bg-good-soft', icon: 'text-good', title: 'Site-urile funcționează din nou', text: 'Agentul a remediat problema; incidentul se închide automat după ce revenirea e confirmată.' },
-    incident: { Icon: Siren, cls: 'border-critical/30 bg-critical-soft', icon: 'text-critical', title: 'Incident în curs', text: 'Agentul investighează; detaliile sunt mai jos.' },
-    degraded: { Icon: AlertTriangle, cls: 'border-warning/40 bg-warning-soft', icon: 'text-warning-ink', title: 'Funcționează, cu probleme', text: 'Unele verificări raportează probleme. Detaliile sunt mai jos.' },
-    down: { Icon: XCircle, cls: 'border-critical/30 bg-critical-soft', icon: 'text-critical', title: 'Un site nu funcționează', text: 'Agentul investighează automat; vezi incidentul de mai jos.' },
-    unknown: { Icon: CircleDashed, cls: 'border-line bg-surface', icon: 'text-ink-3', title: 'Se fac primele verificări', text: 'Primele rezultate apar în câteva secunde.' },
-  }[state];
+function OverallBanner({ state, checkedAt }: { state: BannerState; checkedAt: number | null }) {
+  const map = ({
+    ok: { Icon: CheckCircle2, tone: 'good', title: 'Totul funcționează normal', text: 'Site-urile răspund, nu sunt incidente deschise.' },
+    recovered: { Icon: CheckCircle2, tone: 'good', title: 'Site-urile funcționează din nou', text: 'DAX a remediat problema; incidentul se închide automat după ce revenirea e confirmată.' },
+    incident: { Icon: Siren, tone: 'critical', title: 'Incident în curs', text: 'DAX investighează; detaliile sunt mai jos.' },
+    degraded: { Icon: AlertTriangle, tone: 'warning', title: 'Funcționează, cu probleme', text: 'Unele verificări raportează probleme. Detaliile sunt mai jos.' },
+    down: { Icon: XCircle, tone: 'critical', title: 'Un site nu funcționează', text: 'DAX investighează automat; vezi incidentul de mai jos.' },
+    unknown: { Icon: CircleDashed, tone: 'neutral', title: 'Se fac primele verificări', text: 'Primele rezultate apar în câteva secunde.' },
+  } as const)[state];
+  const tone = {
+    good: { card: 'border-good/25 from-good-soft', tile: 'bg-good text-white shadow-[0_8px_20px_-8px_rgb(12_163_12/0.6)]' },
+    warning: { card: 'border-warning/35 from-warning-soft', tile: 'bg-warning text-on-warning shadow-[0_8px_20px_-8px_rgb(250_178_25/0.6)]' },
+    critical: { card: 'border-critical/25 from-critical-soft', tile: 'bg-critical text-white shadow-[0_8px_20px_-8px_rgb(208_59_59/0.6)]' },
+    neutral: { card: 'border-line/80 from-surface-2', tile: 'bg-surface-3 text-ink-2' },
+  }[map.tone];
   return (
-    <div className={`mb-5 flex items-center gap-3 rounded-2xl border px-4 py-3.5 ${map.cls}`} role="status">
-      <map.Icon className={`size-6 shrink-0 ${map.icon}`} />
-      <div>
-        <div className="font-semibold">{map.title}</div>
-        <div className="text-sm text-ink-2">{map.text}</div>
+    <div className={clsx('card-shadow mb-6 flex items-center gap-4 rounded-3xl border bg-linear-to-br to-surface p-5 sm:p-6', tone.card)} role="status">
+      <span className={clsx('flex size-12 shrink-0 items-center justify-center rounded-2xl', tone.tile)} aria-hidden>
+        <map.Icon className="size-6" />
+      </span>
+      <div className="min-w-0">
+        <div className="font-display text-[20px] leading-tight font-semibold sm:text-[22px]">{map.title}</div>
+        <div className="mt-1 text-[15px] text-ink-2">{map.text}</div>
+        {checkedAt && <div className="mt-1.5 text-[13px] text-ink-3">Ultima verificare: {timeAgo(checkedAt)}</div>}
       </div>
     </div>
   );
@@ -43,33 +53,33 @@ function OverallBanner({ state }: { state: BannerState }) {
 
 function SiteCard({ m }: { m: MonitorDTO }) {
   return (
-    <Link href={`/monitor/${m.id}`} className="block">
-      <Card className="p-4 transition-colors hover:border-line-strong">
+    <Link href={`/monitor/${m.id}`} className="pressable block rounded-3xl">
+      <Card className="h-full p-5 transition-colors hover:border-line-strong">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="font-semibold">{m.name}</div>
-            <div className="truncate text-[13px] text-ink-3">{m.target}</div>
+            <div className="font-display text-[17px] font-semibold">{m.name}</div>
+            <div className="truncate text-[13.5px] text-ink-3">{m.target}</div>
           </div>
           <StatusBadge status={m.status} />
         </div>
-        <div className="mt-3">
+        <div className="mt-4">
           <UptimeStrip series={m.latencySeries} />
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+        <dl className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-surface-2 p-3 text-center">
           <div>
-            <div className="text-ink-3">Răspuns</div>
-            <div className="tabular font-semibold text-ink">{ms(m.lastLatencyMs)}</div>
+            <dt className="text-[12px] text-ink-3">Răspuns</dt>
+            <dd className="tabular mt-0.5 font-display text-[17px] font-semibold text-ink">{ms(m.lastLatencyMs)}</dd>
           </div>
           <div>
-            <div className="text-ink-3">Uptime 24 h</div>
-            <div className="tabular font-semibold text-ink">{pct(m.uptime24h)}</div>
+            <dt className="text-[12px] text-ink-3">Uptime 24 h</dt>
+            <dd className="tabular mt-0.5 font-display text-[17px] font-semibold text-ink">{pct(m.uptime24h)}</dd>
           </div>
           <div>
-            <div className="text-ink-3">Uptime 30 zile</div>
-            <div className="tabular font-semibold text-ink">{pct(m.uptime30d)}</div>
+            <dt className="text-[12px] text-ink-3">Uptime 30 zile</dt>
+            <dd className="tabular mt-0.5 font-display text-[17px] font-semibold text-ink">{pct(m.uptime30d)}</dd>
           </div>
-        </div>
-        {m.status !== 'up' && m.lastMessage && <p className="mt-3 text-[13px] text-ink-2">{m.lastMessage}</p>}
+        </dl>
+        {m.status !== 'up' && m.lastMessage && <p className="mt-3 text-[14px] text-ink-2">{m.lastMessage}</p>}
       </Card>
     </Link>
   );
@@ -111,7 +121,7 @@ function DemoScenario() {
     onError: (err) => toast(errorText(err), 'critical'),
   });
   return (
-    <Card className="mb-5 border-dashed">
+    <Card className="mb-6 border-accent/20 bg-linear-to-br from-accent-soft to-surface">
       <CardHeader title="Încearcă scenariul de cădere" subtitle="Un plugin defect pică site-ul; agentul detectează, investighează și repară singur (simulat)." icon={<Zap className="size-4" />} />
       <div className="flex gap-2 px-4 pb-4 sm:px-5">
         {data?.wpFault ? (
@@ -160,23 +170,25 @@ export function StatusPage() {
   return (
     <Page wide>
       <PageHeader title="Status" subtitle="Disponibilitate, viteză și verificări automate pentru datix.ro și my.datix.ro." />
-      <OverallBanner state={bannerState(data.overall, data.openIncidents)} />
+      <OverallBanner state={bannerState(data.overall, data.openIncidents)} checkedAt={Math.max(0, ...sites.map((m) => m.lastCheckAt ?? 0)) || null} />
       <Onboarding integrations={data.integrations} demo={!!session?.demoMode} />
       {session?.demoMode && <DemoScenario />}
 
       {data.openIncidents.length > 0 && (
-        <div className="mb-5 space-y-2">
+        <div className="mb-6 space-y-3">
           {data.openIncidents.map((i) => (
             <Link
               key={i.id}
               href={`/incidente/${i.id}`}
-              className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${i.status === 'mitigated' ? 'border-warning/40 bg-warning-soft' : 'border-critical/30 bg-critical-soft'}`}
+              className={clsx('pressable card-shadow flex items-center gap-3.5 rounded-3xl border px-4 py-3.5', i.status === 'mitigated' ? 'border-warning/40 bg-warning-soft' : 'border-critical/30 bg-critical-soft')}
             >
-              <Siren className={`size-5 shrink-0 ${i.status === 'mitigated' ? 'text-warning-ink' : 'text-critical'}`} />
+              <span className={clsx('flex size-10 shrink-0 items-center justify-center rounded-xl', i.status === 'mitigated' ? 'bg-warning/25 text-warning-ink' : 'bg-critical/15 text-critical-ink')} aria-hidden>
+                <Siren className="size-5" />
+              </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate font-semibold">{i.title}</div>
-                <div className="text-[13px] text-ink-2">
-                  {i.status === 'investigating' ? 'Agentul investighează' : i.status === 'mitigated' ? 'Atenuat — se confirmă revenirea' : 'Deschis'} · {timeAgo(i.openedAt)}
+                <div className="line-clamp-2 font-display text-[16px] font-semibold">{i.title}</div>
+                <div className="text-[14px] text-ink-2">
+                  {i.status === 'investigating' ? 'DAX investighează' : i.status === 'mitigated' ? 'Atenuat — se confirmă revenirea' : 'Deschis'} · {timeAgo(i.openedAt)}
                 </div>
               </div>
               <SeverityBadge severity={i.severity} />
@@ -185,36 +197,46 @@ export function StatusPage() {
         </div>
       )}
 
-      <div className="mb-6 grid gap-4 md:grid-cols-2">
+      <div className="enter-stagger mb-6 grid gap-4 md:grid-cols-2">
         {sites.map((m) => (
           <SiteCard key={m.id} m={m} />
         ))}
       </div>
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <StatTile label="Incidente deschise" value={data.openIncidents.length} sub={data.recentIncidents.length ? `${data.recentIncidents.length} în ultima perioadă` : 'niciun incident recent'} />
+      <div className="enter-stagger mb-6 grid gap-3 sm:grid-cols-3 sm:gap-4">
+        <StatTile icon={<Siren />} label="Incidente deschise" value={data.openIncidents.length} sub={data.recentIncidents.length ? `${data.recentIncidents.length} în ultima perioadă` : 'niciun incident recent'} />
         <StatTile
+          icon={<ShieldCheck />}
           label="Probleme de securitate"
           value={data.findingsBySeverity.critical + data.findingsBySeverity.high + data.findingsBySeverity.medium}
           sub={`${data.findingsBySeverity.critical} critice · ${data.findingsBySeverity.high} ridicate`}
           tone={data.findingsBySeverity.critical ? 'critical' : undefined}
         />
-        <StatTile label="Cost AI luna aceasta" value={usd(data.usage.monthCostUsd)} sub={`din bugetul de ${usd(data.usage.monthBudgetUsd)} · ${data.usage.monthRequests} cereri`} tone={data.usage.budgetExceeded ? 'critical' : undefined} />
+        <StatTile icon={<Coins />} label="Cost AI luna aceasta" value={usd(data.usage.monthCostUsd)} sub={`din bugetul de ${usd(data.usage.monthBudgetUsd)} · ${data.usage.monthRequests} cereri`} tone={data.usage.budgetExceeded ? 'critical' : undefined} />
       </div>
 
       <Card>
         <CardHeader title="Toate verificările" subtitle="Se rulează automat; poți porni oricare acum." action={<Button size="sm" variant="ghost" icon={<RefreshCw className="size-4" />} onClick={() => refetch()}>Actualizează</Button>} />
-        <ul className="px-2 pb-2">
+        <ul className="divide-y divide-line/70 px-3 pb-2">
           {others.map((m) => (
-            <li key={m.id} className="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-surface-2/50">
-              <StatusBadge status={m.status} className="w-[104px] justify-center" />
-              <Link href={`/monitor/${m.id}`} className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium">{m.name}</div>
-                <div className="truncate text-[12.5px] text-ink-3">{m.lastMessage ?? 'Încă neverificat'}</div>
+            <li key={m.id} className="flex items-center gap-3 px-2 py-2.5">
+              <StatusIcon status={m.status} className="sm:hidden" />
+              <span className="hidden shrink-0 sm:block">
+                <StatusBadge status={m.status} className="w-[108px] justify-center" />
+              </span>
+              <Link href={`/monitor/${m.id}`} className="flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-lg">
+                <div className="line-clamp-2 text-[15px] leading-snug font-medium">{m.name}</div>
+                <div className="truncate text-[13.5px] text-ink-3">{m.lastMessage ?? 'Încă neverificat'}</div>
               </Link>
-              <span className="hidden shrink-0 text-xs text-ink-3 sm:block">{timeAgo(m.lastCheckAt)}</span>
-              <button onClick={() => runNow(m.id)} disabled={runningId === m.id} className="rounded-lg p-2 text-ink-3 hover:bg-surface-3 hover:text-ink disabled:animate-pulse" aria-label="Rulează acum" title="Rulează acum">
-                <Play className="size-4" />
+              <span className="hidden shrink-0 text-[13px] text-ink-3 sm:block">{timeAgo(m.lastCheckAt)}</span>
+              <button
+                onClick={() => runNow(m.id)}
+                disabled={runningId === m.id}
+                className="pressable flex size-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-surface-2 hover:text-accent-fg disabled:animate-pulse"
+                aria-label={`Rulează acum: ${m.name}`}
+                title="Rulează acum"
+              >
+                <Play className="size-[18px]" />
               </button>
             </li>
           ))}

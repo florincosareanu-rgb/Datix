@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useLocation, useRoute, useSearch } from 'wouter';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { ArrowUp, Bot, Square } from 'lucide-react';
+import { Activity, ArrowUp, BarChart3, ShieldCheck, Square, Ticket } from 'lucide-react';
 import type { ApprovalDTO, ChatMessageDTO, ConversationDTO, SessionInfoDTO, ToolCallDTO } from '@datix/shared';
 import { api, errorText } from '../lib/api';
 import { useServerEvents } from '../lib/events';
@@ -11,6 +11,7 @@ import { Markdown } from '../components/Markdown';
 import { ToolSteps } from '../components/ToolSteps';
 import { ApprovalCard } from '../components/ApprovalCard';
 import { Loading } from '../components/ui';
+import { DaxOrb } from '../components/brand';
 
 interface ConversationResponse {
   conversation: ConversationDTO;
@@ -28,15 +29,22 @@ interface LiveBubble {
   thinking: boolean;
 }
 
-const SUGGESTIONS = ['Cum stau site-urile acum?', 'Verifică securitatea datix.ro și my.datix.ro', 'Ce tichete așteaptă răspuns?', 'Cum merg încasările luna aceasta?'];
+const SUGGESTIONS = [
+  { text: 'Cum stau site-urile acum?', hint: 'Disponibilitate, viteză, SSL', icon: Activity },
+  { text: 'Verifică securitatea datix.ro și my.datix.ro', hint: 'WordPress, WHMCS, Cloudflare', icon: ShieldCheck },
+  { text: 'Ce tichete așteaptă răspuns?', hint: 'Analiză și ciorne de răspuns', icon: Ticket },
+  { text: 'Cum merg încasările luna aceasta?', hint: 'Cifre din WHMCS', icon: BarChart3 },
+];
 
 function Thinking() {
   return (
-    <span className="inline-flex items-center gap-1 text-sm text-ink-3">
-      Gândește
-      <span className="typing-dot">.</span>
-      <span className="typing-dot">.</span>
-      <span className="typing-dot">.</span>
+    <span className="inline-flex items-center gap-2 py-1 text-[15px] text-ink-2" role="status">
+      <span className="flex items-center gap-1" aria-hidden>
+        <span className="typing-dot size-1.5 rounded-full bg-accent-fg" />
+        <span className="typing-dot size-1.5 rounded-full bg-accent-fg" />
+        <span className="typing-dot size-1.5 rounded-full bg-accent-fg" />
+      </span>
+      DAX gândește
     </span>
   );
 }
@@ -53,10 +61,8 @@ function AssistantMessage({ content, toolCalls, live, thinking, approvals, error
   const pending = toolCalls.filter((c) => c.status === 'pending_approval' && c.approvalId && approvals.get(c.approvalId)?.status === 'pending');
   return (
     <div className="flex gap-3">
-      <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-        <Bot className="size-4" />
-      </div>
-      <div className="min-w-0 flex-1">
+      <DaxOrb size={28} active={live} className="mt-0.5" />
+      <div className="min-w-0 flex-1 text-[16px]">
         <ToolSteps calls={toolCalls} live={live} />
         {content ? <Markdown text={content} /> : live && thinking ? <Thinking /> : live && !toolCalls.length ? <Thinking /> : null}
         {pending.map((c) => (
@@ -64,7 +70,7 @@ function AssistantMessage({ content, toolCalls, live, thinking, approvals, error
             <ApprovalCard approval={approvals.get(c.approvalId!)!} onDecided={onApprovalDecided} compact />
           </div>
         ))}
-        {error && <p className="mt-2 text-sm text-critical-ink">⚠️ {error}</p>}
+        {error && <p className="mt-2 rounded-xl bg-critical-soft px-3 py-2 text-[14px] text-critical-ink" role="alert">{error}</p>}
       </div>
     </div>
   );
@@ -163,11 +169,11 @@ export function ChatPage() {
   const running = !!live || !!conv.data?.running;
   const messages = conv.data?.messages ?? [];
 
-  // derulare automată (doar dacă utilizatorul e deja jos)
+  // derulare automată (doar dacă utilizatorul e deja jos; ecranul de start rămâne sus, cu salutul vizibil)
   useLayoutEffect(() => {
     const el = scrollRef.current;
-    if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
-  }, [messages.length, live?.content, live?.toolCalls.length, optimistic]);
+    if (el && stickToBottom.current && (id || optimistic)) el.scrollTop = el.scrollHeight;
+  }, [id, messages.length, live?.content, live?.toolCalls.length, optimistic]);
 
   const onScroll = () => {
     const el = scrollRef.current;
@@ -242,28 +248,48 @@ export function ChatPage() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div ref={scrollRef} onScroll={onScroll} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
         {empty ? (
-          <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center px-5 pb-10 text-center">
-            <img src="/icons/favicon.svg" alt="" className="mb-4 size-12 rounded-2xl" />
-            <h1 className="text-2xl font-semibold tracking-tight">{firstName ? `Bună, ${firstName}!` : 'Bună!'}</h1>
-            <p className="mt-2 text-ink-2">Cu ce te ajut azi? Pot verifica site-urile, securitatea, tichetele sau cifrele de business — și pot repara ce s-a stricat.</p>
-            <div className="mt-6 grid w-full gap-2 sm:grid-cols-2">
-              {SUGGESTIONS.map((s) => (
-                <button key={s} onClick={() => void send(s)} className="rounded-2xl border border-line bg-surface px-4 py-3 text-left text-sm text-ink-2 transition-colors hover:border-line-strong hover:text-ink">
-                  {s}
-                </button>
-              ))}
+          <div className="enter mx-auto flex min-h-full max-w-2xl flex-col px-5 py-6 sm:py-10">
+            <div className="my-auto flex flex-col items-center text-center">
+              <DaxOrb size={76} glow className="mb-5 sm:mb-7" />
+              <h1 className="font-display text-[30px] leading-tight font-semibold tracking-tight sm:text-[38px]">
+                {firstName ? (
+                  <>
+                    Bună, <span className="text-brand">{firstName}</span>
+                  </>
+                ) : (
+                  'Bună!'
+                )}
+              </h1>
+              <p className="mt-3 max-w-md text-[16px] text-ink-2">Sunt DAX. Verific site-urile, securitatea, tichetele și cifrele de business — și repar ce s-a stricat.</p>
+              <div className="enter-stagger mt-6 grid w-full gap-3 sm:mt-8 sm:grid-cols-2">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s.text}
+                    onClick={() => void send(s.text)}
+                    className="pressable card-shadow group flex items-center gap-3.5 rounded-3xl border border-line/80 bg-surface p-3.5 text-left hover:border-accent/30 sm:p-4"
+                  >
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent-fg transition-colors group-hover:bg-accent group-hover:text-white" aria-hidden>
+                      <s.icon className="size-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[15px] leading-snug font-medium text-ink">{s.text}</span>
+                      <span className="mt-0.5 block text-[13px] text-ink-3">{s.hint}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
-          <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6">
+          <div className="mx-auto max-w-3xl space-y-7 px-4 py-6 sm:px-6 sm:py-8">
             {conv.isLoading && <Loading />}
             {messages.map((m) =>
               m.role === 'user' ? (
                 <div key={m.id} className="flex justify-end">
-                  <div className="max-w-[85%] rounded-3xl rounded-br-lg bg-surface-2 px-4 py-2.5 whitespace-pre-wrap">{m.content}</div>
+                  <div className="max-w-[85%] rounded-[22px] rounded-br-md bg-accent-soft px-4 py-2.5 text-[16px] whitespace-pre-wrap text-ink">{m.content}</div>
                 </div>
               ) : m.role === 'system_note' ? (
-                <div key={m.id} className="text-center text-xs text-ink-3">
+                <div key={m.id} className="text-center text-[13px] text-ink-3">
                   {m.content}
                 </div>
               ) : (
@@ -272,7 +298,7 @@ export function ChatPage() {
             )}
             {showOptimistic && (
               <div className="flex justify-end">
-                <div className="max-w-[85%] rounded-3xl rounded-br-lg bg-surface-2 px-4 py-2.5 whitespace-pre-wrap">{optimistic}</div>
+                <div className="max-w-[85%] rounded-[22px] rounded-br-md bg-accent-soft px-4 py-2.5 text-[16px] whitespace-pre-wrap text-ink">{optimistic}</div>
               </div>
             )}
             {(live || (running && !live) || (sending && !live)) && (
@@ -282,10 +308,10 @@ export function ChatPage() {
         )}
       </div>
 
-      {/* compunere mesaj */}
-      <div className="safe-bottom border-t border-line bg-page/95 backdrop-blur lg:border-0 lg:bg-transparent">
-        <div className="mx-auto max-w-3xl px-3 pt-2 pb-3 sm:px-6 sm:pb-5">
-          <div className={clsx('flex items-end gap-2 rounded-3xl border bg-surface p-2 pl-4 shadow-sm transition-colors', 'border-line focus-within:border-line-strong')}>
+      {/* compunere mesaj: plutitor, din sticlă */}
+      <div className="safe-bottom px-3 pb-3 sm:px-6 sm:pb-5">
+        <div className="mx-auto max-w-3xl">
+          <div className="glass float-shadow flex items-end gap-2 rounded-[28px] border border-line/80 p-2 pl-5 transition-[border-color,box-shadow] duration-200 focus-within:border-accent/50 focus-within:shadow-[0_0_0_4px_rgb(124_58_237/0.12),var(--float-shadow)]">
             <textarea
               ref={textareaRef}
               rows={1}
@@ -297,25 +323,26 @@ export function ChatPage() {
                   void send();
                 }
               }}
-              placeholder={running ? 'Agentul lucrează… poți scrie următorul mesaj' : 'Scrie un mesaj pentru agent…'}
-              className="max-h-[220px] min-h-[40px] flex-1 resize-none bg-transparent py-2 leading-6 outline-none placeholder:text-ink-3"
+              aria-label="Mesaj pentru DAX"
+              placeholder={running ? 'DAX lucrează… poți scrie următorul mesaj' : 'Scrie-i lui DAX…'}
+              className="max-h-[220px] min-h-[44px] flex-1 resize-none bg-transparent py-2.5 leading-6 outline-none placeholder:text-ink-3"
             />
             {running ? (
-              <button onClick={stop} className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ink text-page" aria-label="Oprește">
+              <button onClick={stop} className="pressable flex size-11 shrink-0 items-center justify-center rounded-full bg-ink text-page" aria-label="Oprește">
                 <Square className="size-4" fill="currentColor" />
               </button>
             ) : (
               <button
                 onClick={() => void send()}
                 disabled={!text.trim() || sending}
-                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white transition-opacity disabled:opacity-30"
+                className="pressable flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[0_8px_20px_-8px_rgb(124_58_237/0.8)] disabled:bg-none disabled:bg-surface-3 disabled:text-ink-3 disabled:shadow-none"
                 aria-label="Trimite"
               >
                 <ArrowUp className="size-5" />
               </button>
             )}
           </div>
-          <p className="mt-1.5 hidden text-center text-[11px] text-ink-3 sm:block">Agentul poate greși — acțiunile riscante îți cer întotdeauna aprobarea.</p>
+          <p className="mt-2 hidden text-center text-[12px] text-ink-3 sm:block">DAX poate greși — acțiunile riscante îți cer întotdeauna aprobarea.</p>
         </div>
       </div>
     </div>

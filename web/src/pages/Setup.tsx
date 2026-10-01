@@ -5,21 +5,27 @@ import type { SessionInfoDTO } from '@datix/shared';
 import { api, errorText } from '../lib/api';
 import { deviceName, passkeysSupported, registerPasskey } from '../lib/webauthn';
 import { Button, Field, Input, Notice } from '../components/ui';
+import { DaxOrb } from '../components/brand';
 
 type Step = 'account' | 'totp' | 'codes' | 'passkey';
 
 function Frame({ step, children }: { step: number; children: React.ReactNode }) {
   return (
-    <div className="safe-top safe-bottom flex min-h-full items-center justify-center bg-page px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="aurora safe-top safe-bottom flex min-h-full items-center justify-center bg-page px-4 py-8">
+      <div className="enter w-full max-w-md">
         <div className="mb-6 flex items-center gap-3">
-          <img src="/icons/favicon.svg" alt="" className="size-10 rounded-xl" />
+          <DaxOrb size={44} />
           <div>
-            <div className="text-lg font-semibold">DAX</div>
-            <div className="text-xs text-ink-3">Configurare inițială · pasul {step} din 4</div>
+            <div className="font-display text-[22px] leading-tight font-semibold tracking-tight">DAX</div>
+            <div className="text-[13px] text-ink-3">Configurare inițială · pasul {step} din 4</div>
           </div>
         </div>
-        <div className="rounded-3xl border border-line bg-surface p-5 shadow-sm sm:p-6">{children}</div>
+        <div className="mb-4 flex gap-1.5" aria-hidden>
+          {[1, 2, 3, 4].map((n) => (
+            <span key={n} className={'h-1.5 flex-1 rounded-full ' + (n <= step ? 'bg-brand' : 'bg-surface-3')} />
+          ))}
+        </div>
+        <div className="glass float-shadow rounded-[28px] border border-line/80 p-6 sm:p-7">{children}</div>
       </div>
     </div>
   );
@@ -62,7 +68,7 @@ export function SetupPage({ session }: { session: SessionInfoDTO }) {
   if (step === 'account') {
     return (
       <Frame step={1}>
-        <h1 className="text-xl font-semibold">Creează contul de administrator</h1>
+        <h1 className="font-display text-[24px] leading-tight font-semibold tracking-tight">Creează contul de administrator</h1>
         <p className="mt-1 mb-5 text-sm text-ink-2">Doar tu vei avea acces la agent. Contul se protejează cu parolă, cod 2FA și Face ID.</p>
         <form
           className="space-y-4"
@@ -105,7 +111,7 @@ export function SetupPage({ session }: { session: SessionInfoDTO }) {
   if (step === 'totp' && totp) {
     return (
       <Frame step={2}>
-        <h1 className="text-xl font-semibold">Activează autentificarea în doi pași</h1>
+        <h1 className="font-display text-[24px] leading-tight font-semibold tracking-tight">Activează autentificarea în doi pași</h1>
         <p className="mt-1 text-sm text-ink-2">
           Scanează codul QR cu o aplicație de autentificare (pe iPhone: aplicația <strong>Parole</strong> → Coduri de verificare, sau Google/Microsoft Authenticator).
         </p>
@@ -151,7 +157,7 @@ export function SetupPage({ session }: { session: SessionInfoDTO }) {
   if (step === 'codes') {
     return (
       <Frame step={3}>
-        <h1 className="text-xl font-semibold">Salvează codurile de recuperare</h1>
+        <h1 className="font-display text-[24px] leading-tight font-semibold tracking-tight">Salvează codurile de recuperare</h1>
         <p className="mt-1 text-sm text-ink-2">Dacă pierzi telefonul, te poți autentifica cu unul dintre aceste coduri (fiecare merge o singură dată). Păstrează-le într-un loc sigur.</p>
         <div className="my-5 grid grid-cols-2 gap-2 rounded-2xl bg-surface-2 p-4 font-mono text-sm">
           {codes.map((c) => (
@@ -176,10 +182,10 @@ export function SetupPage({ session }: { session: SessionInfoDTO }) {
 
   return (
     <Frame step={4}>
-      <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+      <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent-fg">
         <Fingerprint className="size-6" />
       </div>
-      <h1 className="text-xl font-semibold">Activează Face ID</h1>
+      <h1 className="font-display text-[24px] leading-tight font-semibold tracking-tight">Activează Face ID</h1>
       <p className="mt-1 text-sm text-ink-2">Te vei autentifica și vei aproba acțiunile riscante ale agentului cu Face ID / Touch ID — rapid și sigur. Poți adăuga și alte dispozitive mai târziu.</p>
       {!passkeysSupported() && (
         <div className="mt-4">
