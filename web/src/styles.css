@@ -310,6 +310,20 @@ select {
 }
 
 /* --------------------------------------------------------------- intrări în scenă */
+/* textul din caseta de mesaj urcă discret când se schimbă exemplul */
+.composer-hint {
+  animation: hint-up 420ms var(--ease-out) both;
+}
+@keyframes hint-up {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 @keyframes fade-up {
   from {
     opacity: 0;

@@ -35,7 +35,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="aurora safe-top safe-bottom flex min-h-full items-center justify-center bg-page px-4 py-10">
+    <div className="aurora flex min-h-full items-center justify-center bg-page px-4 pt-[calc(env(safe-area-inset-top)+40px)] pb-[calc(env(safe-area-inset-bottom)+40px)]">
       <div className="enter w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <DaxOrb size={68} glow className="mb-6" />

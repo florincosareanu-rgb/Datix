@@ -44,7 +44,8 @@ Graficele folosesc `chart-1`: `#7c3aed` în tema luminoasă și `#9f7aea` în ce
 - Focusul de la tastatură e mereu vizibil (`:focus-visible`). Paginile au `scroll-padding` astfel încât elementul focalizat să nu ajungă sub bara de jos.
 - Animațiile sunt scurte, de 150–300 ms: intrarea paginilor și apăsarea butoanelor (scalare 0,97). Toate se opresc când telefonul are activată „Reducere mișcare”.
 - Pe telefon în landscape (înălțime ≤ 500px, varianta `short:`), bara de jos devine compactă: pictogramă și text pe același rând.
-- Zonele sigure iOS (notch, bara de jos) sunt respectate prin `safe-top`, `safe-bottom` și `safe-x`.
+- Zonele sigure iOS (notch, bara de jos) sunt respectate prin `safe-top`, `safe-bottom` și `safe-x`. Aceste clase **nu se pun împreună cu `pt-*`/`pb-*` pe același element**, pentru că le-ar anula. Acolo unde trebuie ambele, se scrie direct, de exemplu `pb-[max(env(safe-area-inset-bottom),12px)]`.
+- Caseta de mesaj din chat are aceeași poziție și înălțime ca bara de navigare de jos din celelalte ecrane: 12px de la margine (sau deasupra barei iPhone-ului) și 66px înălțime. Textul ei ajutător se schimbă la câteva secunde doar cât caseta e goală și nefocalizată, iar cu „Reducere mișcare” rămâne fix.
 
 ## Componente
 

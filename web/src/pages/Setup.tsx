@@ -11,7 +11,7 @@ type Step = 'account' | 'totp' | 'codes' | 'passkey';
 
 function Frame({ step, children }: { step: number; children: React.ReactNode }) {
   return (
-    <div className="aurora safe-top safe-bottom flex min-h-full items-center justify-center bg-page px-4 py-8">
+    <div className="aurora flex min-h-full items-center justify-center bg-page px-4 pt-[calc(env(safe-area-inset-top)+32px)] pb-[calc(env(safe-area-inset-bottom)+32px)]">
       <div className="enter w-full max-w-md">
         <div className="mb-6 flex items-center gap-3">
           <DaxOrb size={44} />

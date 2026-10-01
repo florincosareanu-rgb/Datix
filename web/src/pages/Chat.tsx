@@ -36,6 +36,9 @@ const SUGGESTIONS = [
   { text: 'Cum merg încasările luna aceasta?', hint: 'Cifre din WHMCS', icon: BarChart3 },
 ];
 
+// Textul din caseta goală: prima frază e vocea lui DAX, apoi se perindă exemple de misiuni.
+const COMPOSER_HINTS = ['Ce misiune îmi dai azi?', '„Verifică viteza pe datix.ro”', '„Caută breșe de securitate”', '„Explică-mi ultimul incident”', '„Cât am încasat luna asta?”', '„Răspunde la tichetele noi”'];
+
 function Thinking() {
   return (
     <span className="inline-flex items-center gap-2 py-1 text-[15px] text-ink-2" role="status">
@@ -241,6 +244,16 @@ export function ChatPage() {
   // mesajul optimist dispare când apare în istoric
   const showOptimistic = optimistic && !messages.some((m) => m.role === 'user' && m.content === optimistic && Date.now() - m.createdAt < 120_000);
   const isTouch = useMemo(() => window.matchMedia('(pointer: coarse)').matches, []);
+
+  // exemplele se schimbă doar cât caseta e goală și nefocalizată (deloc cu „Reducere mișcare”)
+  const [focused, setFocused] = useState(false);
+  const [hintIndex, setHintIndex] = useState(0);
+  const rotateHints = !text && !focused && !running;
+  useEffect(() => {
+    if (!rotateHints || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const t = window.setInterval(() => setHintIndex((i) => (i + 1) % COMPOSER_HINTS.length), 3500);
+    return () => window.clearInterval(t);
+  }, [rotateHints]);
   const empty = !id && !optimistic;
   const firstName = session?.displayName?.split(' ')[0];
 
@@ -308,25 +321,35 @@ export function ChatPage() {
         )}
       </div>
 
-      {/* compunere mesaj: plutitor, din sticlă */}
-      <div className="safe-bottom px-3 pb-3 sm:px-6 sm:pb-5">
+      {/* compunere mesaj: plutitor, din sticlă; aceeași înălțime și poziție ca bara de navigare din celelalte ecrane */}
+      <div className="px-3 pb-[max(env(safe-area-inset-bottom),12px)] sm:px-6 sm:pb-[max(env(safe-area-inset-bottom),20px)]">
         <div className="mx-auto max-w-3xl">
-          <div className="glass float-shadow flex items-end gap-2 rounded-[28px] border border-line/80 p-2 pl-5 transition-[border-color,box-shadow] duration-200 focus-within:border-accent/50 focus-within:shadow-[0_0_0_4px_rgb(124_58_237/0.12),var(--float-shadow)]">
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !isTouch && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  void send();
-                }
-              }}
-              aria-label="Mesaj pentru DAX"
-              placeholder={running ? 'DAX lucrează… poți scrie următorul mesaj' : 'Scrie-i lui DAX…'}
-              className="max-h-[220px] min-h-[44px] flex-1 resize-none bg-transparent py-2.5 leading-6 outline-none placeholder:text-ink-3"
-            />
+          <div className="glass float-shadow flex items-end gap-2 rounded-[28px] border border-line/80 p-2.5 pl-5 transition-[border-color,box-shadow] duration-200 focus-within:border-accent/50 focus-within:shadow-[0_0_0_4px_rgb(124_58_237/0.12),var(--float-shadow)]">
+            <div className="relative min-w-0 flex-1">
+              {!text && (
+                <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-11 overflow-hidden text-ink-3">
+                  <span key={running ? 'running' : hintIndex} className="composer-hint block truncate py-2.5 leading-6">
+                    {running ? 'Lucrez… poți scrie între timp' : COMPOSER_HINTS[hintIndex]}
+                  </span>
+                </div>
+              )}
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !isTouch && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    void send();
+                  }
+                }}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                aria-label="Mesaj pentru DAX"
+                className="block max-h-[220px] min-h-[44px] w-full resize-none bg-transparent py-2.5 leading-6 outline-none"
+              />
+            </div>
             {running ? (
               <button onClick={stop} className="pressable flex size-11 shrink-0 items-center justify-center rounded-full bg-ink text-page" aria-label="Oprește">
                 <Square className="size-4" fill="currentColor" />
