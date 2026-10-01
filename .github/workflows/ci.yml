@@ -28,13 +28,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Construiește imaginea Docker
-        run: docker build -t datix-ai:ci .
+        run: docker build -t dax:ci .
       - name: Pornește containerul și verifică
         run: |
           docker run -d --name smoke -p 3000:3000 \
             -e APP_URL=http://localhost:3000 \
             -e APP_SECRET_KEY=ci-0123456789abcdef0123456789abcdef \
-            -e DEMO_MODE=true datix-ai:ci
+            -e DEMO_MODE=true dax:ci
           for i in $(seq 1 30); do curl -sf http://localhost:3000/api/health && break; sleep 2; done
           curl -sf http://localhost:3000/api/health
           curl -sf -o /dev/null http://localhost:3000/

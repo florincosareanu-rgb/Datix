@@ -105,7 +105,7 @@ export class DemoWhmcs implements WhmcsApi {
 
   async addTicketNote(params: { ticketId: number; message: string }) {
     const t = this.tickets.find((x) => x.id === params.ticketId);
-    t?.notes.push({ admin: 'Datix AI', date: dt(0), message: params.message });
+    t?.notes.push({ admin: 'DAX', date: dt(0), message: params.message });
   }
 
   async updateTicket(params: { ticketId: number; status?: string; priority?: string }) {
@@ -309,10 +309,10 @@ export class DemoDirectAdmin implements DirectAdminApi {
   }
 
   private errorLogFor(path: string): Buffer | null {
-    if (!/\/wp-content\/datix-ai-errors-[a-f0-9]+\.log$/.test(path)) return null;
+    if (!/\/wp-content\/dax-errors-[a-f0-9]+\.log$/.test(path)) return null;
     if (!demoState.wpFault) return Buffer.from('');
     return Buffer.from(
-      `[${new Date().toUTCString()}] PHP Fatal error:  Uncaught Error: Call to undefined function Elementor\\get_kit_settings() in ${WP}/wp-content/plugins/elementor/includes/frontend.php:1312\n[DATIX-AI-FATAL] Uncaught Error: Call to undefined function Elementor\\get_kit_settings() in ${WP}/wp-content/plugins/elementor/includes/frontend.php:1312 URI=/\n`,
+      `[${new Date().toUTCString()}] PHP Fatal error:  Uncaught Error: Call to undefined function Elementor\\get_kit_settings() in ${WP}/wp-content/plugins/elementor/includes/frontend.php:1312\n[DAX-FATAL] Uncaught Error: Call to undefined function Elementor\\get_kit_settings() in ${WP}/wp-content/plugins/elementor/includes/frontend.php:1312 URI=/\n`,
     );
   }
 
@@ -542,7 +542,7 @@ export class DemoWordPress implements WordPressApi {
     { file: 'litespeed-cache/litespeed-cache.php', slug: 'litespeed-cache', name: 'LiteSpeed Cache', version: '7.0', active: true, update: null, auto_update: true },
     { file: 'wordpress-seo/wp-seo.php', slug: 'wordpress-seo', name: 'Yoast SEO', version: '24.1', active: true, update: null, auto_update: true },
     { file: 'akismet/akismet.php', slug: 'akismet', name: 'Akismet Anti-spam', version: '5.3.5', active: false, update: null, auto_update: false },
-    { file: 'datix-ai-connector/datix-ai-connector.php', slug: 'datix-ai-connector', name: 'Datix AI Connector', version: '1.0.0', active: true, update: null, auto_update: false },
+    { file: 'dax-connector/dax-connector.php', slug: 'dax-connector', name: 'DAX Connector', version: '1.0.0', active: true, update: null, auto_update: false },
   ];
 
   private ensureUp() {

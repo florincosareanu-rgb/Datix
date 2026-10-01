@@ -1,4 +1,4 @@
-# Datix AI
+# DAX
 
 Agent AI de operațiuni pentru **datix.ro** (WordPress) și **my.datix.ro** (WHMCS), cu aplicație de chat instalabilă pe iPhone (PWA).
 
@@ -20,18 +20,18 @@ Acțiunile ireversibile (restaurarea unui backup, modificări DNS, actualizări,
 | `server/` | Serverul (Node.js 22, Fastify, SQLite): agentul, monitorizarea, tichetele, API-ul, notificările push |
 | `web/` | Aplicația PWA (React): chat, status, incidente, securitate, tichete, business, setări |
 | `shared/` | Tipurile comune server ↔ aplicație |
-| `integrations/wordpress/datix-ai-connector/` | Pluginul WordPress „Datix AI Connector” |
-| `integrations/whmcs/datix_ai.php` | Hook-ul WHMCS (tichete și evenimente instant) |
+| `integrations/wordpress/dax-connector/` | Pluginul WordPress „DAX Connector” |
+| `integrations/whmcs/dax.php` | Hook-ul WHMCS (tichete și evenimente instant) |
 | `deploy/` | Instalare cu o comandă (Docker + HTTPS automat cu Caddy) |
 | `docs/` | Documentația |
 
 ## Instalare
 
-Pe un VPS mic (1 vCPU, 1 GB RAM, Ubuntu 24.04 / Debian 12), cu un subdomeniu (ex. `ai.datix.ro`) îndreptat spre el:
+Pe un VPS mic (1 vCPU, 1 GB RAM, Ubuntu 24.04 / Debian 12), cu un subdomeniu (ex. `dax.datix.ro`) îndreptat spre el:
 
 ```bash
-git clone https://github.com/florincosareanu-rgb/Datix.git /opt/datix-ai
-cd /opt/datix-ai
+git clone https://github.com/florincosareanu-rgb/Datix.git /opt/dax
+cd /opt/dax
 sudo bash deploy/install.sh
 ```
 

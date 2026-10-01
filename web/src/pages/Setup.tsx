@@ -15,7 +15,7 @@ function Frame({ step, children }: { step: number; children: React.ReactNode }) 
         <div className="mb-6 flex items-center gap-3">
           <img src="/icons/favicon.svg" alt="" className="size-10 rounded-xl" />
           <div>
-            <div className="text-lg font-semibold">Datix AI</div>
+            <div className="text-lg font-semibold">DAX</div>
             <div className="text-xs text-ink-3">Configurare inițială · pasul {step} din 4</div>
           </div>
         </div>

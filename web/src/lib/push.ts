@@ -39,7 +39,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 export async function enablePush(): Promise<void> {
   if (!pushSupported()) throw new Error('Acest browser nu suportă notificări push.');
   const permission = await Notification.requestPermission();
-  if (permission !== 'granted') throw new Error('Notificările nu au fost permise. Le poți activa din Setări → Notificări → Datix AI.');
+  if (permission !== 'granted') throw new Error('Notificările nu au fost permise. Le poți activa din Setări → Notificări → DAX.');
   const reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.register('/sw.js'));
   await navigator.serviceWorker.ready;
   const { publicKey } = await api.get<{ publicKey: string }>('/api/push/key');

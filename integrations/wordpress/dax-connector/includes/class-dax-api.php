@@ -1,7 +1,7 @@
 <?php
 /**
- * Rutele REST folosite de agent: /wp-json/datix-ai/v1/*  (sau ?rest_route=/datix-ai/v1/*).
- * Toate sunt POST și cer semnătura HMAC a agentului (Datix_AI_Auth::permission).
+ * Rutele REST folosite de agent: /wp-json/dax/v1/*  (sau ?rest_route=/dax/v1/*).
+ * Toate sunt POST și cer semnătura HMAC a agentului (DAX_Auth::permission).
  * Răspuns: { "ok": true, "data": ... }
  */
 
@@ -9,9 +9,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class Datix_AI_API
+final class DAX_API
 {
-    const NS = 'datix-ai/v1';
+    const NS = 'dax/v1';
 
     public static function init()
     {
@@ -54,7 +54,7 @@ final class Datix_AI_API
             register_rest_route(self::NS, $route, array(
                 'methods' => 'POST',
                 'callback' => array(__CLASS__, 'dispatch'),
-                'permission_callback' => array('Datix_AI_Auth', 'permission'),
+                'permission_callback' => array('DAX_Auth', 'permission'),
             ));
         }
     }
@@ -65,16 +65,16 @@ final class Datix_AI_API
         $routes = self::route_map();
         $route = substr($request->get_route(), strlen('/' . self::NS));
         if (!isset($routes[$route])) {
-            return new WP_Error('datix_ai_unknown', 'Rută necunoscută.', array('status' => 404));
+            return new WP_Error('dax_unknown', 'Rută necunoscută.', array('status' => 404));
         }
         $params = $request->get_json_params();
         $params = is_array($params) ? $params : array();
         try {
             $data = call_user_func(array(__CLASS__, $routes[$route]), $params);
         } catch (Exception $e) {
-            return new WP_Error('datix_ai_error', $e->getMessage(), array('status' => 500));
+            return new WP_Error('dax_error', $e->getMessage(), array('status' => 500));
         } catch (Error $e) {
-            return new WP_Error('datix_ai_error', 'Eroare PHP: ' . $e->getMessage(), array('status' => 500));
+            return new WP_Error('dax_error', 'Eroare PHP: ' . $e->getMessage(), array('status' => 500));
         }
         if (is_wp_error($data)) {
             $status = $data->get_error_data();
@@ -178,8 +178,8 @@ final class Datix_AI_API
         }
 
         $log = self::debug_log_path();
-        $h = Datix_AI_Protect::hardening();
-        $m = Datix_AI_Protect::maintenance();
+        $h = DAX_Protect::hardening();
+        $m = DAX_Protect::maintenance();
 
         $mu = array();
         foreach (get_mu_plugins() as $file => $data) {
@@ -240,7 +240,7 @@ final class Datix_AI_API
             'maintenance_message' => $m['message'],
             'server_software' => isset($_SERVER['SERVER_SOFTWARE']) ? substr((string) $_SERVER['SERVER_SOFTWARE'], 0, 80) : null,
             'timezone' => function_exists('wp_timezone_string') ? wp_timezone_string() : (string) get_option('timezone_string'),
-            'connector_version' => DATIX_AI_CONNECTOR_VERSION,
+            'connector_version' => DAX_CONNECTOR_VERSION,
         );
     }
 
@@ -306,15 +306,15 @@ final class Datix_AI_API
         $active = !empty($params['active']);
         $all = get_plugins();
         if ($plugin === '' || !isset($all[$plugin])) {
-            return new WP_Error('datix_ai_no_plugin', 'Pluginul „' . $plugin . '” nu există. Folosește câmpul „file” din lista de pluginuri.', array('status' => 404));
+            return new WP_Error('dax_no_plugin', 'Pluginul „' . $plugin . '” nu există. Folosește câmpul „file” din lista de pluginuri.', array('status' => 404));
         }
-        if ($plugin === plugin_basename(DATIX_AI_CONNECTOR_FILE)) {
-            return new WP_Error('datix_ai_self', 'Pluginul Datix AI Connector nu se poate dezactiva prin el însuși.', array('status' => 400));
+        if ($plugin === plugin_basename(DAX_CONNECTOR_FILE)) {
+            return new WP_Error('dax_self', 'Pluginul DAX Connector nu se poate dezactiva prin el însuși.', array('status' => 400));
         }
         if ($active) {
             $r = activate_plugin($plugin);
             if (is_wp_error($r)) {
-                return new WP_Error('datix_ai_activate', 'Activarea a eșuat: ' . $r->get_error_message(), array('status' => 400));
+                return new WP_Error('dax_activate', 'Activarea a eșuat: ' . $r->get_error_message(), array('status' => 400));
             }
         } else {
             deactivate_plugins($plugin);
@@ -334,7 +334,7 @@ final class Datix_AI_API
             require_once ABSPATH . 'wp-admin/includes/class-automatic-upgrader-skin.php';
         }
         if (!WP_Filesystem()) {
-            return new WP_Error('datix_ai_fs', 'WordPress nu poate scrie direct fișierele (cere date FTP). Actualizează din wp-admin sau setează FS_METHOD „direct”.', array('status' => 400));
+            return new WP_Error('dax_fs', 'WordPress nu poate scrie direct fișierele (cere date FTP). Actualizează din wp-admin sau setează FS_METHOD „direct”.', array('status' => 400));
         }
         $type = isset($params['type']) ? (string) $params['type'] : '';
         $items = isset($params['items']) && is_array($params['items']) ? array_values(array_filter(array_map('strval', $params['items']))) : array();
@@ -431,13 +431,13 @@ final class Datix_AI_API
             $ok = !is_wp_error($r) && $r !== false;
             $results[] = array('item' => 'translations', 'ok' => $ok, 'message' => $ok ? 'Traducerile au fost actualizate.' : (is_wp_error($r) ? $r->get_error_message() : self::skin_errors($skin)));
         } else {
-            return new WP_Error('datix_ai_type', 'Tip necunoscut: folosește plugin, theme, core sau translations.', array('status' => 400));
+            return new WP_Error('dax_type', 'Tip necunoscut: folosește plugin, theme, core sau translations.', array('status' => 400));
         }
 
         if (!$results) {
             $results[] = array('item' => $type, 'ok' => true, 'message' => 'Nimic de actualizat.');
         }
-        Datix_AI_Events::log('updates_run', 'Datix AI', array('type' => $type, 'results' => $results));
+        DAX_Events::log('updates_run', 'DAX', array('type' => $type, 'results' => $results));
         return array('results' => $results);
     }
 
@@ -452,19 +452,19 @@ final class Datix_AI_API
 
     public static function security_audit($params)
     {
-        return Datix_AI_Audit::run(!empty($params['deep']));
+        return DAX_Audit::run(!empty($params['deep']));
     }
 
     public static function security_events($params)
     {
         $since = isset($params['since']) ? (int) $params['since'] : 0;
         $limit = isset($params['limit']) ? (int) $params['limit'] : 200;
-        return Datix_AI_Events::recent($since, $limit);
+        return DAX_Events::recent($since, $limit);
     }
 
     public static function admins($params)
     {
-        return Datix_AI_Audit::admins();
+        return DAX_Audit::admins();
     }
 
     public static function hardening($params)
@@ -475,8 +475,8 @@ final class Datix_AI_API
                 $patch[$k] = (bool) $params[$k];
             }
         }
-        $state = Datix_AI_Protect::set_hardening($patch);
-        Datix_AI_Events::log('hardening_changed', 'Datix AI', $state);
+        $state = DAX_Protect::set_hardening($patch);
+        DAX_Events::log('hardening_changed', 'DAX', $state);
         $state['note'] = 'Se aplică de la următoarea încărcare a paginii.';
         return $state;
     }
@@ -487,8 +487,8 @@ final class Datix_AI_API
     {
         $enabled = !empty($params['enabled']);
         $message = isset($params['message']) ? (string) $params['message'] : '';
-        $m = Datix_AI_Protect::set_maintenance($enabled, $message);
-        Datix_AI_Events::log($enabled ? 'maintenance_on' : 'maintenance_off', 'Datix AI', $m['message']);
+        $m = DAX_Protect::set_maintenance($enabled, $message);
+        DAX_Events::log($enabled ? 'maintenance_on' : 'maintenance_off', 'DAX', $m['message']);
         return array('enabled' => $m['enabled'], 'message' => $m['message']);
     }
 
@@ -547,7 +547,7 @@ final class Datix_AI_API
         }
         wp_cache_flush();
         $purged[] = 'object-cache';
-        Datix_AI_Events::log('cache_purged', 'Datix AI', implode(', ', $purged));
+        DAX_Events::log('cache_purged', 'DAX', implode(', ', $purged));
         return array('purged' => $purged);
     }
 
@@ -562,7 +562,7 @@ final class Datix_AI_API
         $chunk = min($bytes, 256 * 1024);
         $fh = fopen($path, 'rb');
         if (!$fh) {
-            return array('path' => Datix_AI_Audit::rel($path), 'bytes' => $bytes, 'content' => '');
+            return array('path' => DAX_Audit::rel($path), 'bytes' => $bytes, 'content' => '');
         }
         fseek($fh, -$chunk, SEEK_END);
         $data = (string) fread($fh, $chunk);
@@ -572,6 +572,6 @@ final class Datix_AI_API
             array_shift($all); // prima linie poate fi tăiată
         }
         $content = implode("\n", array_slice($all, -$lines));
-        return array('path' => Datix_AI_Audit::rel($path), 'bytes' => $bytes, 'content' => wp_check_invalid_utf8($content, true));
+        return array('path' => DAX_Audit::rel($path), 'bytes' => $bytes, 'content' => wp_check_invalid_utf8($content, true));
     }
 }

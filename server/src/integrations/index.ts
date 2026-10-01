@@ -186,7 +186,7 @@ export class Integrations {
       }
       case 'wordpress': {
         const c = this.wordpress();
-        if (!c) throw new Error('Activează integrarea și instalează pluginul Datix AI Connector cu secretul afișat în Setări.');
+        if (!c) throw new Error('Activează integrarea și instalează pluginul DAX Connector cu secretul afișat în Setări.');
         const h = await c.health();
         return `Conectat la WordPress ${h.wp_version} (PHP ${h.php_version}), plugin conector ${h.connector_version}. Actualizări disponibile: ${h.updates.plugins} pluginuri, ${h.updates.themes} teme${h.updates.core ? `, nucleu ${h.updates.core}` : ''}.`;
       }

@@ -72,6 +72,6 @@ export const INTEGRATION_LABEL: Record<string, string> = {
   directadmin: 'DirectAdmin',
   reseller: 'DirectAdmin Reseller',
   cloudflare: 'Cloudflare',
-  wordpress: 'WordPress (plugin Datix AI)',
+  wordpress: 'WordPress (plugin DAX)',
   pagespeed: 'Google PageSpeed',
 };

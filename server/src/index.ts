@@ -23,7 +23,7 @@ async function main() {
     stopScheduler = startScheduler(services);
   }
 
-  log.info({ url: config.appUrl, port: config.port, demo: config.demoMode }, `Datix AI ${config.version} a pornit`);
+  log.info({ url: config.appUrl, port: config.port, demo: config.demoMode }, `DAX ${config.version} a pornit`);
   const setupToken = services.auth.ensureSetupToken();
   if (setupToken) {
     const line = '='.repeat(72);

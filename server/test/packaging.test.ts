@@ -63,25 +63,25 @@ describe('arhiva ZIP', () => {
 
 describe('pluginul WordPress descărcabil', () => {
   const secret = "s3cr3t'cu\\caractere";
-  const zip = buildPluginZip(join(repo, 'integrations'), secret, 'https://ai.datix.ro');
+  const zip = buildPluginZip(join(repo, 'integrations'), secret, 'https://dax.datix.ro');
   const files = readZip(zip);
 
   it('conține pluginul complet și config.php cu cheia', () => {
-    expect(files.has('datix-ai-connector/datix-ai-connector.php')).toBe(true);
-    expect(files.has('datix-ai-connector/includes/class-datix-ai-auth.php')).toBe(true);
-    expect(files.has('datix-ai-connector/uninstall.php')).toBe(true);
-    const config = files.get('datix-ai-connector/config.php')!.toString();
-    expect(config).toContain(`define('DATIX_AI_SECRET', ${phpString(secret)});`);
-    expect(config).toContain("define('DATIX_AI_AGENT_URL', 'https://ai.datix.ro');");
+    expect(files.has('dax-connector/dax-connector.php')).toBe(true);
+    expect(files.has('dax-connector/includes/class-dax-auth.php')).toBe(true);
+    expect(files.has('dax-connector/uninstall.php')).toBe(true);
+    const config = files.get('dax-connector/config.php')!.toString();
+    expect(config).toContain(`define('DAX_SECRET', ${phpString(secret)});`);
+    expect(config).toContain("define('DAX_AGENT_URL', 'https://dax.datix.ro');");
   });
 
   it.skipIf(!hasPhp)('config.php e PHP valid și definește exact valorile', () => {
     const dir = mkdtempSync(join(tmpdir(), 'cfg-'));
     try {
       const file = join(dir, 'config.php');
-      writeFileSync(file, pluginConfigPhp(secret, 'https://ai.datix.ro'));
-      const out = execFileSync('php', ['-r', `define('ABSPATH', '/'); require '${file}'; echo json_encode([DATIX_AI_SECRET, DATIX_AI_AGENT_URL]);`], { encoding: 'utf8' });
-      expect(JSON.parse(out)).toEqual([secret, 'https://ai.datix.ro']);
+      writeFileSync(file, pluginConfigPhp(secret, 'https://dax.datix.ro'));
+      const out = execFileSync('php', ['-r', `define('ABSPATH', '/'); require '${file}'; echo json_encode([DAX_SECRET, DAX_AGENT_URL]);`], { encoding: 'utf8' });
+      expect(JSON.parse(out)).toEqual([secret, 'https://dax.datix.ro']);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -89,13 +89,13 @@ describe('pluginul WordPress descărcabil', () => {
 });
 
 describe('hook-ul WHMCS descărcabil', () => {
-  const template = readFileSync(join(repo, 'integrations/whmcs/datix_ai.php'), 'utf8');
+  const template = readFileSync(join(repo, 'integrations/whmcs/dax.php'), 'utf8');
 
   it('completează adresa și cheia', () => {
-    const php = whmcsHookPhp(template, 'abc123secretabc123', 'https://ai.datix.ro');
-    expect(php).toContain("define('DATIX_AI_URL', 'https://ai.datix.ro');");
-    expect(php).toContain("define('DATIX_AI_SECRET', 'abc123secretabc123');");
-    expect(php).not.toContain('%%DATIX_AI_');
+    const php = whmcsHookPhp(template, 'abc123secretabc123', 'https://dax.datix.ro');
+    expect(php).toContain("define('DAX_URL', 'https://dax.datix.ro');");
+    expect(php).toContain("define('DAX_SECRET', 'abc123secretabc123');");
+    expect(php).not.toContain('%%DAX_');
   });
 
   it('refuză un șablon modificat', () => {
@@ -113,7 +113,7 @@ describe('trusa de salvare WordPress (mu-plugin)', () => {
   it.skipIf(!hasPhp)('fișierul generat e PHP valid', () => {
     const dir = mkdtempSync(join(tmpdir(), 'rescue-'));
     try {
-      const file = join(dir, 'datix-ai-rescue.php');
+      const file = join(dir, 'dax-rescue.php');
       writeFileSync(file, renderRescuePlugin({ ...defaultRescueConfig(), disabled_plugins: ["o'ciudat"], maintenance: true, maintenance_message: 'Revenim <b>imediat</b> "azi"' }));
       expect(execFileSync('php', ['-l', file], { encoding: 'utf8' })).toContain('No syntax errors');
     } finally {

@@ -26,11 +26,11 @@ interface PushPayload {
 }
 
 self.addEventListener('push', (event) => {
-  let data: PushPayload = { title: 'Datix AI', body: 'Ai o notificare nouă.' };
+  let data: PushPayload = { title: 'DAX', body: 'Ai o notificare nouă.' };
   try {
     if (event.data) data = event.data.json() as PushPayload;
   } catch {
-    if (event.data) data = { title: 'Datix AI', body: event.data.text() };
+    if (event.data) data = { title: 'DAX', body: event.data.text() };
   }
   const urgent = data.priority === 'critical' || data.priority === 'high';
   event.waitUntil(

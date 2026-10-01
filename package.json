@@ -1,8 +1,8 @@
 {
-  "name": "datix-ai",
+  "name": "dax",
   "version": "1.0.0",
   "private": true,
-  "description": "Datix AI — agent AI care monitorizează, securizează și repară datix.ro (WordPress) și my.datix.ro (WHMCS), cu aplicație de chat PWA.",
+  "description": "DAX — agent AI care monitorizează, securizează și repară datix.ro (WordPress) și my.datix.ro (WHMCS), cu aplicație de chat PWA.",
   "type": "module",
   "workspaces": [
     "shared",

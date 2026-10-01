@@ -358,7 +358,7 @@ const whmcsHealthCheck: CheckFn = async (s) => {
         recommendation: 'Verifică jobul cron din DirectAdmin (php -q …/crons/cron.php) și jurnalul WHMCS → Utilities → Logs → Module/Automation.',
       });
   } else {
-    findings.push({ key: 'cron_hook_missing', severity: 'info', title: 'Hook-ul Datix AI nu e instalat în WHMCS', recommendation: 'Copiază fișierul datix_ai.php în includes/hooks (vezi ghidul) pentru tichete instant și verificarea cron-ului.' });
+    findings.push({ key: 'cron_hook_missing', severity: 'info', title: 'Hook-ul DAX nu e instalat în WHMCS', recommendation: 'Copiază fișierul dax.php în includes/hooks (vezi ghidul) pentru tichete instant și verificarea cron-ului.' });
   }
   // administratori noi
   const admins = await w.getAdminUsers().catch(() => null);

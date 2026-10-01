@@ -6,7 +6,7 @@ import type { LookupFunction } from 'node:net';
 import type { TLSSocket, PeerCertificate } from 'node:tls';
 import { stripHtml } from '../../util/text';
 
-export const MONITOR_USER_AGENT = 'Mozilla/5.0 (compatible; DatixAI-Monitor/1.0; +https://datix.ro)';
+export const MONITOR_USER_AGENT = 'Mozilla/5.0 (compatible; DAX-Monitor/1.0; +https://datix.ro)';
 
 export interface HttpCheckOptions {
   url: string;

@@ -7,7 +7,7 @@ export const wordpressTools = [
   defineTool({
     name: 'wp_health',
     label: 'Verific WordPress',
-    description: 'Starea WordPress (prin pluginul Datix AI): versiuni WordPress/PHP, temă, actualizări disponibile, setări de siguranță, cron, pluginuri de cache, mod mentenanță.',
+    description: 'Starea WordPress (prin pluginul DAX): versiuni WordPress/PHP, temă, actualizări disponibile, setări de siguranță, cron, pluginuri de cache, mod mentenanță.',
     schema: z.object({}),
     risk: 'read',
     contexts: READ_EVERYWHERE,
@@ -71,7 +71,7 @@ export const wordpressTools = [
   defineTool({
     name: 'wp_security_events',
     label: 'Citesc evenimentele de securitate WordPress',
-    description: 'Autentificări reușite/eșuate, administratori noi, schimbări de rol, pluginuri activate, teme schimbate — din jurnalul pluginului Datix AI.',
+    description: 'Autentificări reușite/eșuate, administratori noi, schimbări de rol, pluginuri activate, teme schimbate — din jurnalul pluginului DAX.',
     schema: z.object({ hours: z.number().int().min(1).max(24 * 30).default(24) }),
     risk: 'read',
     contexts: OPS,
@@ -120,7 +120,7 @@ export const wordpressTools = [
   defineTool({
     name: 'wp_set_maintenance',
     label: 'Mod mentenanță WordPress',
-    description: 'Pornește/oprește pagina de mentenanță pentru vizitatori (prin pluginul Datix AI; administratorii văd site-ul normal).',
+    description: 'Pornește/oprește pagina de mentenanță pentru vizitatori (prin pluginul DAX; administratorii văd site-ul normal).',
     schema: z.object({ enabled: z.boolean(), message: z.string().max(300).optional() }),
     risk: 'write',
     contexts: OPS,
@@ -133,7 +133,7 @@ export const wordpressTools = [
   defineTool({
     name: 'wp_toggle_plugin',
     label: 'Activez/dezactivez un plugin',
-    description: 'Activează sau dezactivează un plugin WordPress prin pluginul Datix AI (când site-ul funcționează). Pentru site căzut folosește wp_rescue_disable_plugins.',
+    description: 'Activează sau dezactivează un plugin WordPress prin pluginul DAX (când site-ul funcționează). Pentru site căzut folosește wp_rescue_disable_plugins.',
     schema: z.object({ plugin: z.string().min(3).describe('Fișierul pluginului, ex. akismet/akismet.php'), active: z.boolean() }),
     risk: 'write',
     contexts: OPS,
@@ -146,7 +146,7 @@ export const wordpressTools = [
   defineTool({
     name: 'wp_hardening',
     label: 'Întăresc securitatea WordPress',
-    description: 'Activează protecții din pluginul Datix AI: blocarea XML-RPC, blocarea listării utilizatorilor, dezactivarea editorului de fișiere din wp-admin.',
+    description: 'Activează protecții din pluginul DAX: blocarea XML-RPC, blocarea listării utilizatorilor, dezactivarea editorului de fișiere din wp-admin.',
     schema: z.object({
       disable_xmlrpc: z.boolean().optional(),
       block_user_enum: z.boolean().optional(),
@@ -209,7 +209,7 @@ export const rescueTools = [
   defineTool({
     name: 'wp_rescue_read_errors',
     label: 'Citesc erorile PHP capturate',
-    description: 'Citește erorile PHP capturate de trusa de salvare (liniile [DATIX-AI-FATAL] arată fișierul și linia care a picat site-ul).',
+    description: 'Citește erorile PHP capturate de trusa de salvare (liniile [DAX-FATAL] arată fișierul și linia care a picat site-ul).',
     schema: z.object({ lines: z.number().int().min(10).max(400).default(120) }),
     risk: 'read',
     contexts: OPS,

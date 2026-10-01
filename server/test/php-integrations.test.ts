@@ -33,7 +33,7 @@ function runPhpAsync<T>(file: string, input: unknown): Promise<T> {
 type VerifyResult = { ok: true; agent: boolean } | { ok: false; status: number; message: string };
 
 describe.skipIf(!hasPhp)('pluginul WordPress acceptă doar cererile semnate de agent', () => {
-  const route = '/datix-ai/v1/health';
+  const route = '/dax/v1/health';
   const body = JSON.stringify({ deep: false });
 
   it('acceptă o cerere semnată corect și respinge reluarea ei', () => {
@@ -57,7 +57,7 @@ describe.skipIf(!hasPhp)('pluginul WordPress acceptă doar cererile semnate de a
       mode: 'verify',
       requests: [
         { headers: signRequest(SECRET, 'POST', route, body), route, body: JSON.stringify({ deep: true }) },
-        { headers: signRequest(SECRET, 'POST', route, body), route: '/datix-ai/v1/plugins/toggle', body },
+        { headers: signRequest(SECRET, 'POST', route, body), route: '/dax/v1/plugins/toggle', body },
         { headers: signRequest('alta-cheie-complet-diferita-1234567890', 'POST', route, body), route, body },
         { headers: { 'X-Datix-Timestamp': good['X-Datix-Timestamp'] }, route, body },
       ],
@@ -135,8 +135,8 @@ describe.skipIf(!hasPhp)('hook-ul WHMCS', () => {
 
   it('nu trimite nimic cât timp adresa și cheia nu sunt completate', async () => {
     const out = await runPhpAsync<{ registered: string[] }>('whmcs-hook-harness.php', {
-      url: '%%DATIX_AI_URL%%',
-      secret: '%%DATIX_AI_SECRET%%',
+      url: '%%DAX_URL%%',
+      secret: '%%DAX_SECRET%%',
       fire: [{ hook: 'AfterCronJob', vars: {} }],
     });
     expect(out.registered.length).toBe(8);

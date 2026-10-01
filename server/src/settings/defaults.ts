@@ -3,7 +3,7 @@ import type { AppSettings } from '@datix/shared';
 export function defaultSettings(appUrl: string): AppSettings {
   return {
     general: {
-      agentName: 'Datix AI',
+      agentName: 'DAX',
       companyName: 'Datix',
       ownerName: '',
       timezone: 'Europe/Bucharest',

@@ -3,7 +3,7 @@
 ## Imaginea de ansamblu
 
 ```
- iPhone (PWA)  ──HTTPS──▶  Caddy  ──▶  Server Datix AI (Node.js, un singur proces)
+ iPhone (PWA)  ──HTTPS──▶  Caddy  ──▶  Server DAX (Node.js, un singur proces)
    chat, status,                         ├─ API + flux live (SSE)
    aprobări cu Face ID                   ├─ Agentul AI (bucla model → unelte → model)
    notificări push ◀── Web Push ─────────├─ Monitorizare (verificări la 5 s – 24 h)

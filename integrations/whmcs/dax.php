@@ -1,12 +1,12 @@
 <?php
 /**
- * Datix AI — hook WHMCS
+ * DAX — hook WHMCS
  *
- * Anunță instant agentul Datix AI despre: tichete noi și răspunsuri ale clienților, autentificări de admin,
+ * Anunță instant agentul DAX despre: tichete noi și răspunsuri ale clienților, autentificări de admin,
  * comenzi, plăți, cereri de anulare, clienți noi și rularea cron-ului WHMCS.
  *
  * Instalare: copiază fișierul în folderul includes/hooks/ din WHMCS.
- * Fișierul descărcat din aplicația Datix AI (Setări → Integrări → WHMCS) are deja adresa și cheia completate.
+ * Fișierul descărcat din aplicația DAX (Setări → Integrări → WHMCS) are deja adresa și cheia completate.
  *
  * Siguranță:
  *  - trimite doar identificatori (ID tichet, ID client etc.), nu conținutul mesajelor sau date personale;
@@ -21,22 +21,22 @@ if (!defined('WHMCS')) {
     die('Acest fișier nu poate fi accesat direct.');
 }
 
-if (!defined('DATIX_AI_URL')) {
-    define('DATIX_AI_URL', '%%DATIX_AI_URL%%');
+if (!defined('DAX_URL')) {
+    define('DAX_URL', '%%DAX_URL%%');
 }
-if (!defined('DATIX_AI_SECRET')) {
-    define('DATIX_AI_SECRET', '%%DATIX_AI_SECRET%%');
+if (!defined('DAX_SECRET')) {
+    define('DAX_SECRET', '%%DAX_SECRET%%');
 }
 
-if (!function_exists('datix_ai_configured')) {
-    function datix_ai_configured()
+if (!function_exists('dax_configured')) {
+    function dax_configured()
     {
-        return DATIX_AI_URL !== '' && strpos(DATIX_AI_URL, '%%') === false
-            && strlen(DATIX_AI_SECRET) >= 16 && strpos(DATIX_AI_SECRET, '%%') === false;
+        return DAX_URL !== '' && strpos(DAX_URL, '%%') === false
+            && strlen(DAX_SECRET) >= 16 && strpos(DAX_SECRET, '%%') === false;
     }
 
     /** Antetele semnate: timestamp \n nonce \n POST \n rută \n sha256(corp). */
-    function datix_ai_sign_headers($path, $body, $secret)
+    function dax_sign_headers($path, $body, $secret)
     {
         $timestamp = (string) time();
         try {
@@ -52,7 +52,7 @@ if (!function_exists('datix_ai_configured')) {
         );
     }
 
-    function datix_ai_client_ip()
+    function dax_client_ip()
     {
         foreach (array('HTTP_CF_CONNECTING_IP', 'REMOTE_ADDR') as $key) {
             if (!empty($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP)) {
@@ -63,24 +63,24 @@ if (!function_exists('datix_ai_configured')) {
     }
 
     /** Notează în jurnalul WHMCS o eroare de trimitere, cel mult o dată pe oră. */
-    function datix_ai_log_failure($message)
+    function dax_log_failure($message)
     {
-        $marker = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'datix_ai_whmcs_' . md5(DATIX_AI_URL) . '.log';
+        $marker = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'dax_whmcs_' . md5(DAX_URL) . '.log';
         $last = @file_exists($marker) ? (int) @file_get_contents($marker) : 0;
         if (time() - $last < 3600) {
             return;
         }
         @file_put_contents($marker, (string) time());
         if (function_exists('logActivity')) {
-            logActivity('Datix AI: nu am putut anunța agentul — ' . $message);
+            logActivity('DAX: nu am putut anunța agentul — ' . $message);
         }
     }
 
     /** Trimite un eveniment către agent. Nu aruncă niciodată excepții. */
-    function datix_ai_send($event, array $data)
+    function dax_send($event, array $data)
     {
         try {
-            if (!datix_ai_configured() || !function_exists('curl_init')) {
+            if (!dax_configured() || !function_exists('curl_init')) {
                 return;
             }
             $path = '/api/webhooks/whmcs';
@@ -88,10 +88,10 @@ if (!function_exists('datix_ai_configured')) {
             if ($body === false) {
                 return;
             }
-            $headers = datix_ai_sign_headers($path, $body, DATIX_AI_SECRET);
+            $headers = dax_sign_headers($path, $body, DAX_SECRET);
             $headers[] = 'Content-Type: application/json';
-            $headers[] = 'User-Agent: DatixAI-WHMCS/1.0';
-            $ch = curl_init(rtrim(DATIX_AI_URL, '/') . $path);
+            $headers[] = 'User-Agent: DAX-WHMCS/1.0';
+            $ch = curl_init(rtrim(DAX_URL, '/') . $path);
             curl_setopt_array($ch, array(
                 CURLOPT_POST => true,
                 CURLOPT_POSTFIELDS => $body,
@@ -108,14 +108,14 @@ if (!function_exists('datix_ai_configured')) {
             $error = curl_error($ch);
             curl_close($ch);
             if ($code < 200 || $code >= 300) {
-                datix_ai_log_failure($error !== '' ? $error : ('HTTP ' . $code));
+                dax_log_failure($error !== '' ? $error : ('HTTP ' . $code));
             }
         } catch (Throwable $e) {
-            datix_ai_log_failure($e->getMessage());
+            dax_log_failure($e->getMessage());
         }
     }
 
-    function datix_ai_int($vars, $key)
+    function dax_int($vars, $key)
     {
         return isset($vars[$key]) ? (int) $vars[$key] : null;
     }
@@ -124,22 +124,22 @@ if (!function_exists('datix_ai_configured')) {
 // ------------------------------------------------------------------ tichete
 
 add_hook('TicketOpen', 1, function ($vars) {
-    datix_ai_send('ticket.open', array(
-        'ticketid' => datix_ai_int($vars, 'ticketid'),
+    dax_send('ticket.open', array(
+        'ticketid' => dax_int($vars, 'ticketid'),
         'tid' => isset($vars['ticketmask']) ? (string) $vars['ticketmask'] : null,
-        'userid' => datix_ai_int($vars, 'userid'),
-        'deptid' => datix_ai_int($vars, 'deptid'),
+        'userid' => dax_int($vars, 'userid'),
+        'deptid' => dax_int($vars, 'deptid'),
         'deptname' => isset($vars['deptname']) ? (string) $vars['deptname'] : null,
         'priority' => isset($vars['priority']) ? (string) $vars['priority'] : null,
     ));
 });
 
 add_hook('TicketUserReply', 1, function ($vars) {
-    datix_ai_send('ticket.reply', array(
-        'ticketid' => datix_ai_int($vars, 'ticketid'),
-        'replyid' => datix_ai_int($vars, 'replyid'),
-        'userid' => datix_ai_int($vars, 'userid'),
-        'deptid' => datix_ai_int($vars, 'deptid'),
+    dax_send('ticket.reply', array(
+        'ticketid' => dax_int($vars, 'ticketid'),
+        'replyid' => dax_int($vars, 'replyid'),
+        'userid' => dax_int($vars, 'userid'),
+        'deptid' => dax_int($vars, 'deptid'),
         'deptname' => isset($vars['deptname']) ? (string) $vars['deptname'] : null,
         'status' => isset($vars['status']) ? (string) $vars['status'] : null,
     ));
@@ -148,10 +148,10 @@ add_hook('TicketUserReply', 1, function ($vars) {
 // ------------------------------------------------------------------ securitate
 
 add_hook('AdminLogin', 1, function ($vars) {
-    datix_ai_send('admin.login', array(
-        'adminid' => datix_ai_int($vars, 'adminid'),
+    dax_send('admin.login', array(
+        'adminid' => dax_int($vars, 'adminid'),
         'username' => isset($vars['username']) ? (string) $vars['username'] : null,
-        'ip' => datix_ai_client_ip(),
+        'ip' => dax_client_ip(),
         'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? substr((string) $_SERVER['HTTP_USER_AGENT'], 0, 300) : null,
     ));
 });
@@ -159,33 +159,33 @@ add_hook('AdminLogin', 1, function ($vars) {
 // ------------------------------------------------------------------ business
 
 add_hook('AfterShoppingCartCheckout', 1, function ($vars) {
-    datix_ai_send('order.created', array(
-        'orderid' => datix_ai_int($vars, 'OrderID'),
+    dax_send('order.created', array(
+        'orderid' => dax_int($vars, 'OrderID'),
         'ordernumber' => isset($vars['OrderNumber']) ? (string) $vars['OrderNumber'] : null,
-        'invoiceid' => datix_ai_int($vars, 'InvoiceID'),
+        'invoiceid' => dax_int($vars, 'InvoiceID'),
         'amount' => isset($vars['TotalDue']) ? (string) $vars['TotalDue'] : null,
     ));
 });
 
 add_hook('InvoicePaid', 1, function ($vars) {
-    datix_ai_send('invoice.paid', array('invoiceid' => datix_ai_int($vars, 'invoiceid')));
+    dax_send('invoice.paid', array('invoiceid' => dax_int($vars, 'invoiceid')));
 });
 
 add_hook('CancellationRequest', 1, function ($vars) {
-    datix_ai_send('cancellation.request', array(
-        'userid' => datix_ai_int($vars, 'userid'),
-        'relid' => datix_ai_int($vars, 'relid'),
+    dax_send('cancellation.request', array(
+        'userid' => dax_int($vars, 'userid'),
+        'relid' => dax_int($vars, 'relid'),
         'type' => isset($vars['type']) ? (string) $vars['type'] : null,
         'reason' => isset($vars['reason']) ? substr((string) $vars['reason'], 0, 500) : null,
     ));
 });
 
 add_hook('ClientAdd', 1, function ($vars) {
-    datix_ai_send('client.add', array('userid' => datix_ai_int($vars, 'userid')));
+    dax_send('client.add', array('userid' => dax_int($vars, 'userid')));
 });
 
 // ------------------------------------------------------------------ cron (semn că WHMCS funcționează)
 
 add_hook('AfterCronJob', 1, function ($vars) {
-    datix_ai_send('cron.heartbeat', array('at' => time()));
+    dax_send('cron.heartbeat', array('at' => time()));
 });

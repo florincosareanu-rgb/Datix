@@ -1,10 +1,10 @@
-# Datix AI: aplicația + Caddy (HTTPS automat cu Let's Encrypt).
+# DAX: aplicația + Caddy (HTTPS automat cu Let's Encrypt).
 # Pornire: docker compose up -d --build   (sau: sudo bash deploy/install.sh)
 
 services:
   app:
     build: .
-    image: datix-ai:latest
+    image: dax:latest
     restart: unless-stopped
     env_file: .env
     environment:

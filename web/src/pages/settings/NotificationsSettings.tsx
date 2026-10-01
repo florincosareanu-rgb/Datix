@@ -25,7 +25,7 @@ function InstallSteps() {
       <li className="flex gap-3">
         <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">3</span>
         <span>
-          Deschide <strong>Datix AI</strong> de pe ecranul principal, intră aici și apasă „Activează notificările”.
+          Deschide <strong>DAX</strong> de pe ecranul principal, intră aici și apasă „Activează notificările”.
         </span>
       </li>
     </ol>
@@ -66,7 +66,7 @@ function PushCard() {
           </>
         )}
         {state === 'unsupported' && <Notice tone="warning">Acest browser nu suportă notificări push. {isIos() ? 'Actualizează iOS la 16.4 sau mai nou.' : 'Încearcă Chrome, Edge, Firefox sau Safari.'}</Notice>}
-        {state === 'denied' && <Notice tone="warning">Notificările sunt blocate. Pe iPhone: Configurări → Notificări → Datix AI → Permite notificările. Apoi revino aici.</Notice>}
+        {state === 'denied' && <Notice tone="warning">Notificările sunt blocate. Pe iPhone: Configurări → Notificări → DAX → Permite notificările. Apoi revino aici.</Notice>}
         {state === 'off' && (
           <Button variant="primary" icon={<Bell className="size-4" />} loading={busy} onClick={() => run(enablePush, 'Notificările sunt active pe acest dispozitiv.')}>
             Activează notificările

@@ -8,7 +8,7 @@ import { createZip, type ZipEntry } from '../../util/zip';
 // Descărcări cu datele de conectare deja completate: pluginul WordPress și hook-ul WHMCS.
 // Conțin cheia secretă, deci cer confirmare (Face ID / cod 2FA) și nu se păstrează în cache.
 
-const PLUGIN_SLUG = 'datix-ai-connector';
+const PLUGIN_SLUG = 'dax-connector';
 
 /** Text sigur într-un șir PHP între apostrofuri. */
 export function phpString(value: string): string {
@@ -18,25 +18,25 @@ export function phpString(value: string): string {
 export function pluginConfigPhp(secret: string, agentUrl: string, now = new Date()): string {
   return [
     '<?php',
-    `// Generat automat de Datix AI (${now.toISOString().slice(0, 10)}). Conține cheia de conectare — nu publica acest fișier.`,
+    `// Generat automat de DAX (${now.toISOString().slice(0, 10)}). Conține cheia de conectare — nu publica acest fișier.`,
     '',
     "if (!defined('ABSPATH')) {",
     '    exit;',
     '}',
     '',
-    "if (!defined('DATIX_AI_SECRET')) {",
-    `    define('DATIX_AI_SECRET', ${phpString(secret)});`,
+    "if (!defined('DAX_SECRET')) {",
+    `    define('DAX_SECRET', ${phpString(secret)});`,
     '}',
-    "if (!defined('DATIX_AI_AGENT_URL')) {",
-    `    define('DATIX_AI_AGENT_URL', ${phpString(agentUrl)});`,
+    "if (!defined('DAX_AGENT_URL')) {",
+    `    define('DAX_AGENT_URL', ${phpString(agentUrl)});`,
     '}',
     '',
   ].join('\n');
 }
 
 export function whmcsHookPhp(template: string, secret: string, agentUrl: string): string {
-  const url = "'%%DATIX_AI_URL%%'";
-  const key = "'%%DATIX_AI_SECRET%%'";
+  const url = "'%%DAX_URL%%'";
+  const key = "'%%DAX_SECRET%%'";
   // fiecare marcaj trebuie să apară exact o dată, altfel fișierul ar pleca fără cheie sau cu valori amestecate
   if (template.split(url).length !== 2 || template.split(key).length !== 2) throw new Error('Șablonul hook-ului WHMCS nu are formatul așteptat.');
   return template.replace(url, phpString(agentUrl)).replace(key, phpString(secret));
@@ -88,14 +88,14 @@ export function downloadRoutes(app: FastifyInstance, s: Services) {
 
   app.get('/api/downloads/whmcs-hook.php', async (req, reply) => {
     requireStepUp(req, s);
-    const path = join(s.config.integrationsDir, 'whmcs', 'datix_ai.php');
+    const path = join(s.config.integrationsDir, 'whmcs', 'dax.php');
     if (!existsSync(path)) throw new HttpError(500, `Nu găsesc șablonul hook-ului WHMCS în ${path}.`);
     const secret = s.secrets.ensureGenerated('whmcs.webhookSecret');
     const php = whmcsHookPhp(readFileSync(path, 'utf8'), secret, s.config.appUrl);
     s.audit.log({ actor: 'owner', action: 'download.whmcs_hook', ip: clientIp(req) });
     return reply
       .header('Content-Type', 'application/octet-stream')
-      .header('Content-Disposition', 'attachment; filename="datix_ai.php"')
+      .header('Content-Disposition', 'attachment; filename="dax.php"')
       .header('Cache-Control', 'no-store')
       .send(php);
   });

@@ -87,7 +87,7 @@ export class WhmcsClient {
     const res = await fetchWithRetry(this.endpoint, {
       service: SERVICE,
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', 'User-Agent': 'DatixAI/1.0' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', 'User-Agent': 'DAX/1.0' },
       body: body.toString(),
       timeoutMs: this.opts.timeoutMs ?? 30_000,
       retries: 1,

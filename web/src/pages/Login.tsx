@@ -38,7 +38,7 @@ export function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <img src="/icons/favicon.svg" alt="" className="mb-4 size-16 rounded-2xl shadow-sm" />
-          <h1 className="text-2xl font-semibold tracking-tight">Datix AI</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">DAX</h1>
           <p className="mt-1 text-sm text-ink-2">Agentul de operațiuni pentru datix.ro și my.datix.ro</p>
         </div>
         <div className="rounded-3xl border border-line bg-surface p-5 shadow-sm">

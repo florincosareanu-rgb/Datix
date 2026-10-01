@@ -7,10 +7,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class Datix_AI_Protect
+final class DAX_Protect
 {
-    const HARDENING = 'datix_ai_connector_hardening';
-    const MAINTENANCE = 'datix_ai_connector_maintenance';
+    const HARDENING = 'dax_connector_hardening';
+    const MAINTENANCE = 'dax_connector_maintenance';
 
     /** @return array */
     public static function hardening()

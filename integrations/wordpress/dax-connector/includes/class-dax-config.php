@@ -7,10 +7,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class Datix_AI_Config
+final class DAX_Config
 {
-    const OPTION = 'datix_ai_connector_settings';
-    const LAST_SEEN = 'datix_ai_connector_last_seen';
+    const OPTION = 'dax_connector_settings';
+    const LAST_SEEN = 'dax_connector_last_seen';
 
     /** @return array */
     public static function options()
@@ -27,8 +27,8 @@ final class Datix_AI_Config
     /** Cheia secretă comună cu agentul (din wp-config.php, config.php sau setările pluginului). */
     public static function secret()
     {
-        if (defined('DATIX_AI_SECRET') && is_string(DATIX_AI_SECRET) && DATIX_AI_SECRET !== '') {
-            return DATIX_AI_SECRET;
+        if (defined('DAX_SECRET') && is_string(DAX_SECRET) && DAX_SECRET !== '') {
+            return DAX_SECRET;
         }
         $o = self::options();
         return isset($o['secret']) ? (string) $o['secret'] : '';
@@ -37,19 +37,19 @@ final class Datix_AI_Config
     /** De unde vine cheia: 'constant', 'database' sau '' (lipsă). */
     public static function secret_source()
     {
-        if (defined('DATIX_AI_SECRET') && is_string(DATIX_AI_SECRET) && DATIX_AI_SECRET !== '') {
+        if (defined('DAX_SECRET') && is_string(DAX_SECRET) && DAX_SECRET !== '') {
             return 'constant';
         }
         $o = self::options();
         return !empty($o['secret']) ? 'database' : '';
     }
 
-    /** Adresa agentului (ex. https://ai.datix.ro), fără „/” la final. */
+    /** Adresa agentului (ex. https://dax.datix.ro), fără „/” la final. */
     public static function agent_url()
     {
         $url = '';
-        if (defined('DATIX_AI_AGENT_URL') && is_string(DATIX_AI_AGENT_URL)) {
-            $url = DATIX_AI_AGENT_URL;
+        if (defined('DAX_AGENT_URL') && is_string(DAX_AGENT_URL)) {
+            $url = DAX_AGENT_URL;
         } else {
             $o = self::options();
             $url = isset($o['agent_url']) ? (string) $o['agent_url'] : '';

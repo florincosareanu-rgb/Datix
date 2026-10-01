@@ -35,7 +35,7 @@ export function App() {
     if (session.data?.agentName) document.title = session.data.agentName;
   }, [session.data?.agentName]);
 
-  if (session.isLoading) return <Loading label="Pornesc Datix AI…" />;
+  if (session.isLoading) return <Loading label="Pornesc DAX…" />;
   if (session.error || !session.data) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-sm text-ink-2">

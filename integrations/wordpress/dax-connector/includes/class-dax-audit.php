@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class Datix_AI_Audit
+final class DAX_Audit
 {
     const PHP_EXT = '/\.(php[0-9]?|phtml|phar|pht|phps|inc)$/i';
 
@@ -84,13 +84,13 @@ final class Datix_AI_Audit
     /** Sumele de control oficiale pentru versiunea instalată (păstrate o zi în cache). */
     private static function fetch_checksums($version, $locale)
     {
-        $key = 'datix_ai_sums_' . md5($version . '|' . $locale);
+        $key = 'dax_sums_' . md5($version . '|' . $locale);
         $cached = get_site_transient($key);
         if (is_array($cached) && !empty($cached)) {
             return $cached;
         }
         $url = 'https://api.wordpress.org/core/checksums/1.0/?' . http_build_query(array('version' => $version, 'locale' => $locale), '', '&');
-        $res = wp_remote_get($url, array('timeout' => 20, 'user-agent' => 'DatixAIConnector/' . DATIX_AI_CONNECTOR_VERSION));
+        $res = wp_remote_get($url, array('timeout' => 20, 'user-agent' => 'DAXConnector/' . DAX_CONNECTOR_VERSION));
         if (is_wp_error($res) || (int) wp_remote_retrieve_response_code($res) !== 200) {
             return null;
         }
@@ -137,7 +137,7 @@ final class Datix_AI_Audit
         $root = wp_normalize_path(ABSPATH);
         foreach (array('wp-admin', 'wp-includes') as $dir) {
             self::walk($root . $dir, function ($path) use ($checksums, &$unknown) {
-                $rel = Datix_AI_Audit::rel($path);
+                $rel = DAX_Audit::rel($path);
                 if (!isset($checksums[$rel]) && count($unknown) < 200) {
                     $unknown[] = $rel;
                 }
@@ -179,7 +179,7 @@ final class Datix_AI_Audit
             if ($size < 100 && strpos((string) @file_get_contents($path), 'Silence') !== false) {
                 return;
             }
-            $found[] = array('path' => Datix_AI_Audit::rel($path), 'size' => $size, 'modified' => gmdate('c', (int) $file->getMTime()));
+            $found[] = array('path' => DAX_Audit::rel($path), 'size' => $size, 'modified' => gmdate('c', (int) $file->getMTime()));
         }, microtime(true) + 10);
         return $found;
     }
@@ -194,7 +194,7 @@ final class Datix_AI_Audit
         $collect = function ($path, $file) use (&$found, $since) {
             $mtime = (int) $file->getMTime();
             if ($mtime >= $since) {
-                $found[] = array('path' => Datix_AI_Audit::rel($path), 'modified' => gmdate('c', $mtime), 'ts' => $mtime);
+                $found[] = array('path' => DAX_Audit::rel($path), 'modified' => gmdate('c', $mtime), 'ts' => $mtime);
             }
         };
         foreach (array('plugins', 'themes', 'mu-plugins', 'uploads') as $dir) {
@@ -222,7 +222,7 @@ final class Datix_AI_Audit
         $patterns = self::patterns();
         $found = array();
         $deadline = microtime(true) + $time_budget;
-        $self_dir = wp_normalize_path(DATIX_AI_CONNECTOR_DIR);
+        $self_dir = wp_normalize_path(DAX_CONNECTOR_DIR);
         $scan = function ($path, $file) use (&$found, $patterns) {
             if (count($found) >= 100 || $file->getSize() > 1572864) {
                 return;
@@ -237,7 +237,7 @@ final class Datix_AI_Audit
                     $line = substr_count(substr($code, 0, $offset), "\n") + 1;
                     $snippet = preg_replace('/\s+/', ' ', substr($code, max(0, $offset - 30), 140));
                     $found[] = array(
-                        'path' => Datix_AI_Audit::rel($path),
+                        'path' => DAX_Audit::rel($path),
                         'pattern' => $name,
                         'line' => $line,
                         'snippet' => wp_check_invalid_utf8((string) $snippet, true),
@@ -285,7 +285,7 @@ final class Datix_AI_Audit
 
     private static function admin_row($u)
     {
-        $last = (int) get_user_meta($u->ID, 'datix_ai_last_login', true);
+        $last = (int) get_user_meta($u->ID, 'dax_last_login', true);
         return array(
             'id' => (int) $u->ID,
             'login' => $u->user_login,
@@ -298,7 +298,7 @@ final class Datix_AI_Audit
     public static function risky_settings()
     {
         global $wpdb;
-        $h = Datix_AI_Protect::hardening();
+        $h = DAX_Protect::hardening();
         $config = file_exists(ABSPATH . 'wp-config.php') ? ABSPATH . 'wp-config.php' : dirname(ABSPATH) . '/wp-config.php';
         $perms = file_exists($config) ? (fileperms($config) & 0777) : null;
         $debug_log_public = defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG === true && file_exists(WP_CONTENT_DIR . '/debug.log');

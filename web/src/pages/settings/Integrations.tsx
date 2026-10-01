@@ -226,7 +226,7 @@ export function IntegrationsTab() {
             pune-l în folderul <code>includes/hooks/</code> din WHMCS.
           </p>
           <div className="flex flex-wrap gap-2">
-            <DownloadButton path="/api/downloads/whmcs-hook.php" filename="datix_ai.php">
+            <DownloadButton path="/api/downloads/whmcs-hook.php" filename="dax.php">
               Descarcă hook-ul WHMCS
             </DownloadButton>
           </div>
@@ -237,7 +237,7 @@ export function IntegrationsTab() {
 
       <IntegrationCard
         k="wordpress"
-        title="WordPress (plugin Datix AI)"
+        title="WordPress (plugin DAX)"
         icon={<Layers className="size-4" />}
         guide="wordpress"
         subtitle="Starea WordPress, pluginuri, actualizări, utilizatori admin, modul mentenanță și evenimente de securitate pe datix.ro."
@@ -252,7 +252,7 @@ export function IntegrationsTab() {
           <li>În WordPress: Module → Adaugă → Încarcă modul → alege fișierul → Activează.</li>
           <li>Apasă „Testează conexiunea” mai jos.</li>
         </ol>
-        <DownloadButton path="/api/downloads/wordpress-plugin.zip" filename="datix-ai-connector.zip">
+        <DownloadButton path="/api/downloads/wordpress-plugin.zip" filename="dax-connector.zip">
           Descarcă pluginul WordPress
         </DownloadButton>
         <GeneratedSecret secretKey="wordpress.secret" label="Cheia pluginului" regenerateWarning="După regenerare, pluginul din WordPress nu se mai poate conecta până nu descarci și instalezi din nou pluginul (sau actualizezi cheia în setările lui). Continui?" />

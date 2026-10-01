@@ -2,7 +2,7 @@
 /**
  * Verificarea cererilor de la agent și semnarea evenimentelor trimise către agent.
  *
- * Mesajul semnat (identic cu serverul Datix AI):
+ * Mesajul semnat (identic cu serverul DAX):
  *   timestamp \n nonce \n METODĂ \n rută \n sha256(corp)
  * Antete: X-Datix-Timestamp, X-Datix-Nonce, X-Datix-Signature (HMAC-SHA256, hex).
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class Datix_AI_Auth
+final class DAX_Auth
 {
     const MAX_SKEW = 300;
     const MAX_FAILURES = 20;
@@ -47,15 +47,15 @@ final class Datix_AI_Auth
     /** permission_callback pentru toate rutele agentului. */
     public static function permission($request)
     {
-        $secret = Datix_AI_Config::secret();
+        $secret = DAX_Config::secret();
         if (strlen($secret) < 16) {
-            return new WP_Error('datix_ai_not_configured', 'Pluginul Datix AI nu are cheia de conectare configurată (DATIX_AI_SECRET).', array('status' => 503));
+            return new WP_Error('dax_not_configured', 'Pluginul DAX nu are cheia de conectare configurată (DAX_SECRET).', array('status' => 503));
         }
         $ip = self::client_ip();
-        $lock_key = 'datix_ai_fail_' . md5($ip);
+        $lock_key = 'dax_fail_' . md5($ip);
         $failures = (int) get_transient($lock_key);
         if ($failures >= self::MAX_FAILURES) {
-            return new WP_Error('datix_ai_locked', 'Prea multe încercări eșuate de pe acest IP. Reîncearcă peste 10 minute.', array('status' => 429));
+            return new WP_Error('dax_locked', 'Prea multe încercări eșuate de pe acest IP. Reîncearcă peste 10 minute.', array('status' => 429));
         }
 
         $timestamp = (string) $request->get_header('x_datix_timestamp');
@@ -74,9 +74,9 @@ final class Datix_AI_Auth
             } else {
                 $expected = hash_hmac('sha256', self::canonical($timestamp, $nonce, 'POST', $request->get_route(), $request->get_body()), $secret);
                 if (!hash_equals($expected, $signature)) {
-                    $error = array('Semnătură invalidă — cheia de conectare nu corespunde cu cea din aplicația Datix AI.', 403);
+                    $error = array('Semnătură invalidă — cheia de conectare nu corespunde cu cea din aplicația DAX.', 403);
                 } else {
-                    $nonce_key = 'datix_ai_n_' . md5($nonce);
+                    $nonce_key = 'dax_n_' . md5($nonce);
                     if (get_transient($nonce_key)) {
                         $error = array('Cerere repetată.', 409);
                     } else {
@@ -88,11 +88,11 @@ final class Datix_AI_Auth
 
         if ($error !== null) {
             set_transient($lock_key, $failures + 1, self::LOCK_WINDOW);
-            return new WP_Error('datix_ai_auth', $error[0], array('status' => $error[1]));
+            return new WP_Error('dax_auth', $error[0], array('status' => $error[1]));
         }
 
         self::$agent_request = true;
-        Datix_AI_Config::touch_last_seen($ip);
+        DAX_Config::touch_last_seen($ip);
         return true;
     }
 
@@ -105,7 +105,7 @@ final class Datix_AI_Auth
         } catch (Exception $e) {
             $nonce = md5(uniqid('', true) . wp_rand());
         }
-        $signature = hash_hmac('sha256', self::canonical($timestamp, $nonce, $method, $path, $body), Datix_AI_Config::secret());
+        $signature = hash_hmac('sha256', self::canonical($timestamp, $nonce, $method, $path, $body), DAX_Config::secret());
         return array(
             'X-Datix-Timestamp' => $timestamp,
             'X-Datix-Nonce' => $nonce,

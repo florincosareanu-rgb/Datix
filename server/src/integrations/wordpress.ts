@@ -1,11 +1,11 @@
 import { signRequest } from '../crypto/hmac';
 import { fetchWithRetry, IntegrationError } from './http';
 
-// Client pentru pluginul „Datix AI Connector” instalat pe WordPress.
+// Client pentru pluginul „DAX Connector” instalat pe WordPress.
 // Toate apelurile sunt POST cu corp JSON, semnate HMAC (vezi crypto/hmac.ts și pluginul PHP).
 
 const SERVICE = 'WordPress';
-const NAMESPACE = '/datix-ai/v1';
+const NAMESPACE = '/dax/v1';
 
 export interface WpHealth {
   wp_version: string;
@@ -60,7 +60,7 @@ export class WordPressConnector {
       return fetchWithRetry(this.urlFor(route), {
         service: SERVICE,
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'DatixAI/1.0', ...headers },
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'DAX/1.0', ...headers },
         body: payload,
         timeoutMs,
         retries: 0,
@@ -70,7 +70,7 @@ export class WordPressConnector {
     // site cu permalinkuri simple sau /wp-json blocat → încercăm ?rest_route=
     if (res.status === 404 && !this.useQueryRoute) {
       const text = await res.text();
-      if (!/datix_ai|rest_no_route.*datix/i.test(text)) {
+      if (!/\bdax_|rest_no_route.*dax/i.test(text)) {
         this.useQueryRoute = true;
         res = await attempt();
       }
@@ -82,14 +82,14 @@ export class WordPressConnector {
     } catch {
       throw new IntegrationError(
         SERVICE,
-        `răspuns invalid (HTTP ${res.status}). ${res.status >= 500 ? 'Site-ul WordPress pare să aibă o eroare.' : 'Verifică dacă pluginul Datix AI Connector e activ.'} ${text.slice(0, 120)}`,
+        `răspuns invalid (HTTP ${res.status}). ${res.status >= 500 ? 'Site-ul WordPress pare să aibă o eroare.' : 'Verifică dacă pluginul DAX Connector e activ.'} ${text.slice(0, 120)}`,
         res.status,
       );
     }
     if (!res.ok) {
       const d = data as { code?: string; message?: string };
-      if (d.code === 'rest_no_route') throw new IntegrationError(SERVICE, 'pluginul Datix AI Connector nu e instalat sau nu e activ pe site.', res.status);
-      if (res.status === 401 || res.status === 403) throw new IntegrationError(SERVICE, `${d.message ?? 'acces refuzat'} — verifică secretul DATIX_AI_SECRET din wp-config.php.`, res.status);
+      if (d.code === 'rest_no_route') throw new IntegrationError(SERVICE, 'pluginul DAX Connector nu e instalat sau nu e activ pe site.', res.status);
+      if (res.status === 401 || res.status === 403) throw new IntegrationError(SERVICE, `${d.message ?? 'acces refuzat'} — verifică secretul DAX_SECRET din wp-config.php.`, res.status);
       throw new IntegrationError(SERVICE, d.message ?? `HTTP ${res.status}`, res.status);
     }
     const env = data as { ok?: boolean; data?: T; error?: string };

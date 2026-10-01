@@ -80,7 +80,7 @@ async function fetchVulns(kind: 'core' | 'plugin' | 'theme', slugOrVersion: stri
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < 12 * 3_600_000) return hit.data;
   const res = await fetch(`https://www.wpvulnerability.net/${kind}/${encodeURIComponent(slugOrVersion)}/`, {
-    headers: { Accept: 'application/json', 'User-Agent': 'DatixAI/1.0' },
+    headers: { Accept: 'application/json', 'User-Agent': 'DAX/1.0' },
     signal: AbortSignal.timeout(15_000),
   });
   if (!res.ok) throw new Error(`WPVulnerability HTTP ${res.status}`);

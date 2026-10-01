@@ -1,7 +1,7 @@
 // Mascarea datelor sensibile înainte ca textul să ajungă la AI (DeepSeek) sau în istoricul conversației.
 // Păstrăm ce e util pentru diagnostic (domenii, e-mailuri, IP-uri) și ascundem secrete și date personale critice.
 
-const WP_SECRETS = /(define\(\s*['"](?:DB_PASSWORD|AUTH_KEY|SECURE_AUTH_KEY|LOGGED_IN_KEY|NONCE_KEY|AUTH_SALT|SECURE_AUTH_SALT|LOGGED_IN_SALT|NONCE_SALT|DATIX_AI_SECRET|WP_REDIS_PASSWORD|SMTP_PASS(?:WORD)?)['"]\s*,\s*)(['"])(?:(?!\2).)*\2/g;
+const WP_SECRETS = /(define\(\s*['"](?:DB_PASSWORD|AUTH_KEY|SECURE_AUTH_KEY|LOGGED_IN_KEY|NONCE_KEY|AUTH_SALT|SECURE_AUTH_SALT|LOGGED_IN_SALT|NONCE_SALT|DAX_SECRET|WP_REDIS_PASSWORD|SMTP_PASS(?:WORD)?)['"]\s*,\s*)(['"])(?:(?!\2).)*\2/g;
 const WHMCS_SECRETS = /(\$(?:db_password|cc_encryption_hash|license|api_access_key|autoauthkey|mysql_root_password|smtp_password)\s*=\s*)(['"])(?:(?!\2).)*\2/gi;
 const PRIVATE_KEY = /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g;
 const BEARER = /\b(Bearer|Basic)\s+[A-Za-z0-9._~+/-]{16,}=*/g;

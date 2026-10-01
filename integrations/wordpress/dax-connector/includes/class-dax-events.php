@@ -8,12 +8,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class Datix_AI_Events
+final class DAX_Events
 {
     const DB_VERSION = '1';
-    const DB_OPTION = 'datix_ai_connector_db';
-    const KNOWN_MODIFIED = 'datix_ai_connector_known_modified';
-    const CRON_HOOK = 'datix_ai_connector_daily';
+    const DB_OPTION = 'dax_connector_db';
+    const KNOWN_MODIFIED = 'dax_connector_known_modified';
+    const CRON_HOOK = 'dax_connector_daily';
     const BURST_THRESHOLD = 20;
     const BURST_WINDOW = 600;
     const KEEP_DAYS = 90;
@@ -27,7 +27,7 @@ final class Datix_AI_Events
     public static function table()
     {
         global $wpdb;
-        return $wpdb->prefix . 'datix_ai_events';
+        return $wpdb->prefix . 'dax_events';
     }
 
     public static function install()
@@ -82,8 +82,8 @@ final class Datix_AI_Events
 
     private static function actor()
     {
-        if (Datix_AI_Auth::$agent_request) {
-            return 'Datix AI';
+        if (DAX_Auth::$agent_request) {
+            return 'DAX';
         }
         $u = wp_get_current_user();
         return ($u && $u->exists()) ? $u->user_login : null;
@@ -101,7 +101,7 @@ final class Datix_AI_Events
                 'at' => time(),
                 'type' => substr((string) $type, 0, 40),
                 'user' => $user === null ? null : substr((string) $user, 0, 191),
-                'ip' => Datix_AI_Auth::client_ip(),
+                'ip' => DAX_Auth::client_ip(),
                 'details' => $details === null ? null : substr(is_string($details) ? $details : wp_json_encode($details), 0, 2000),
             ),
             array('%d', '%s', '%s', '%s', '%s')
@@ -124,8 +124,8 @@ final class Datix_AI_Events
         if (empty(self::$queue)) {
             return;
         }
-        $url = Datix_AI_Config::agent_url();
-        if ($url === '' || !Datix_AI_Config::is_configured()) {
+        $url = DAX_Config::agent_url();
+        if ($url === '' || !DAX_Config::is_configured()) {
             self::$queue = array();
             return;
         }
@@ -137,14 +137,14 @@ final class Datix_AI_Events
         $path = '/api/webhooks/wordpress';
         foreach (array_slice(self::$queue, 0, 10) as $item) {
             $body = wp_json_encode(array('event' => $item['event'], 'data' => $item['data'], 'sent_at' => time()));
-            $headers = Datix_AI_Auth::sign_headers('POST', $path, $body);
+            $headers = DAX_Auth::sign_headers('POST', $path, $body);
             $headers['Content-Type'] = 'application/json';
             wp_remote_post($url . $path, array(
                 'timeout' => 5,
                 'redirection' => 0,
                 'headers' => $headers,
                 'body' => $body,
-                'user-agent' => 'DatixAIConnector/' . DATIX_AI_CONNECTOR_VERSION,
+                'user-agent' => 'DAXConnector/' . DAX_CONNECTOR_VERSION,
             ));
         }
         self::$queue = array();
@@ -157,7 +157,7 @@ final class Datix_AI_Events
         $roles = ($user instanceof WP_User) ? implode(',', (array) $user->roles) : '';
         self::log('login_success', $user_login, $roles);
         if ($user instanceof WP_User) {
-            update_user_meta($user->ID, 'datix_ai_last_login', time());
+            update_user_meta($user->ID, 'dax_last_login', time());
         }
     }
 
@@ -168,8 +168,8 @@ final class Datix_AI_Events
         $table = self::table();
         $since = time() - self::BURST_WINDOW;
         $count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE type = 'login_failed' AND at > %d", $since));
-        if ($count >= self::BURST_THRESHOLD && !get_transient('datix_ai_burst_sent')) {
-            set_transient('datix_ai_burst_sent', 1, 30 * MINUTE_IN_SECONDS);
+        if ($count >= self::BURST_THRESHOLD && !get_transient('dax_burst_sent')) {
+            set_transient('dax_burst_sent', 1, 30 * MINUTE_IN_SECONDS);
             $top = $wpdb->get_results($wpdb->prepare("SELECT ip, COUNT(*) n FROM {$table} WHERE type = 'login_failed' AND at > %d GROUP BY ip ORDER BY n DESC LIMIT 3", $since), ARRAY_A);
             self::push('login_failed_burst', array('count' => $count, 'minutes' => self::BURST_WINDOW / 60, 'top_ips' => $top));
         }
@@ -307,7 +307,7 @@ final class Datix_AI_Events
         $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE at < %d", time() - self::KEEP_DAYS * DAY_IN_SECONDS));
         $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE type = 'login_failed' AND at < %d", time() - 30 * DAY_IN_SECONDS));
 
-        $check = Datix_AI_Audit::core_checksums();
+        $check = DAX_Audit::core_checksums();
         if (empty($check['ok']) && !empty($check['modified'])) {
             $known = get_option(self::KNOWN_MODIFIED, array());
             $known = is_array($known) ? $known : array();

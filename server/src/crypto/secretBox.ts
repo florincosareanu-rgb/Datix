@@ -8,6 +8,7 @@ import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:cr
 export class SecretBox {
   private readonly key: Buffer;
 
+  // „datix-ai/…” rămâne neschimbat intenționat: e parte din derivarea cheii; schimbarea lui ar face cheile salvate ilizibile
   constructor(masterSecret: string, purpose = 'datix-ai/secrets/v1') {
     this.key = Buffer.from(hkdfSync('sha256', Buffer.from(masterSecret, 'utf8'), Buffer.alloc(0), Buffer.from(purpose, 'utf8'), 32));
   }

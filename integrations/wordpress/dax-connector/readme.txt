@@ -1,4 +1,4 @@
-=== Datix AI Connector ===
+=== DAX Connector ===
 Contributors: datix
 Tags: monitoring, security, maintenance, ai
 Requires at least: 5.8
@@ -8,11 +8,11 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Conectează site-ul WordPress la agentul Datix AI.
+Conectează site-ul WordPress la agentul DAX.
 
 == Description ==
 
-Pluginul permite agentului Datix AI să:
+Pluginul permite agentului DAX să:
 
 * verifice starea WordPress (versiuni, actualizări, setări de siguranță, cron, cache);
 * listeze, activeze și dezactiveze pluginuri și să ruleze actualizări (cu aprobarea ta în aplicație);
@@ -28,14 +28,14 @@ Securitate:
 
 == Installation ==
 
-1. În aplicația Datix AI: Setări → Integrări → WordPress → „Descarcă pluginul WordPress” (arhiva conține deja cheia și adresa agentului).
+1. În aplicația DAX: Setări → Integrări → WordPress → „Descarcă pluginul WordPress” (arhiva conține deja cheia și adresa agentului).
 2. În WordPress: Module → Adaugă → Încarcă modul → alege arhiva → Activează.
-3. În aplicația Datix AI apasă „Testează conexiunea”.
+3. În aplicația DAX apasă „Testează conexiunea”.
 
 Alternativ, poți defini cheia în wp-config.php:
 
-    define('DATIX_AI_SECRET', 'cheia-din-aplicatie');
-    define('DATIX_AI_AGENT_URL', 'https://ai.datix.ro');
+    define('DAX_SECRET', 'cheia-din-aplicatie');
+    define('DAX_AGENT_URL', 'https://dax.datix.ro');
 
 == Changelog ==
 

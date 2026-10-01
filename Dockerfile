@@ -1,4 +1,4 @@
-# Datix AI — imagine de producție (server Node + interfața PWA construită).
+# DAX — imagine de producție (server Node + interfața PWA construită).
 
 # ---------------------------------------------------------------- 1. construcție
 FROM node:22-bookworm-slim AS build

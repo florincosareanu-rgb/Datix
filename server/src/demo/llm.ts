@@ -162,7 +162,7 @@ function ownerScript(req: LlmRequest): ScriptStep {
   else if (/verific|merge|functioneaza|cad|picat|status|stare|cum sta|totul|situat/.test(t)) step = pick(['status_overview', {}]);
   if (step?.toolCalls?.length) return step;
   return {
-    text: `Salut! Sunt agentul **Datix AI** (acum în **modul demo**, cu date simulate).\n\nPot să:\n- verific **starea site-urilor** (datix.ro, my.datix.ro), SSL, DNS, domenii;\n- analizez **securitatea** (WordPress, WHMCS, Cloudflare);\n- îți arăt **tichetele** și să pregătesc răspunsuri;\n- îți spun **cifrele de business** (încasări, facturi, comenzi);\n- **repar** site-ul când pică (de exemplu, dezactivez un plugin defect).\n\nÎncearcă: „Cum stau site-urile?”, „Verifică securitatea” sau „Ce tichete am?”.`,
+    text: `Salut! Sunt **DAX**, agentul AI al Datix (acum în **modul demo**, cu date simulate).\n\nPot să:\n- verific **starea site-urilor** (datix.ro, my.datix.ro), SSL, DNS, domenii;\n- analizez **securitatea** (WordPress, WHMCS, Cloudflare);\n- îți arăt **tichetele** și să pregătesc răspunsuri;\n- îți spun **cifrele de business** (încasări, facturi, comenzi);\n- **repar** site-ul când pică (de exemplu, dezactivez un plugin defect).\n\nÎncearcă: „Cum stau site-urile?”, „Verifică securitatea” sau „Ce tichete am?”.`,
   };
 }
 

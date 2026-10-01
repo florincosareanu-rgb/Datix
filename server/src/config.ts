@@ -12,7 +12,7 @@ const envSchema = z.object({
   NODE_ENV: z.string().default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
   HOST: z.string().default('0.0.0.0'),
-  /** Adresa publică a aplicației, ex. https://ai.datix.ro (folosită pentru Face ID, linkuri, verificarea originii). */
+  /** Adresa publică a aplicației, ex. https://dax.datix.ro (folosită pentru Face ID, linkuri, verificarea originii). */
   APP_URL: z.string().url().default('http://localhost:5173'),
   DATA_DIR: z.string().default('./data'),
   /** Cheia principală (min. 32 caractere) cu care se criptează datele de acces salvate. */

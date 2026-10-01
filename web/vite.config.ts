@@ -20,8 +20,8 @@ export default defineConfig({
       injectRegister: false,
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Datix AI',
-        short_name: 'Datix AI',
+        name: 'DAX',
+        short_name: 'DAX',
         description: 'Agentul AI care monitorizează, securizează și repară datix.ro și my.datix.ro.',
         lang: 'ro',
         start_url: '/',

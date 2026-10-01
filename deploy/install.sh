@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Instalează Datix AI pe un VPS Ubuntu/Debian curat, cu Docker și HTTPS automat (Caddy).
+# Instalează DAX pe un VPS Ubuntu/Debian curat, cu Docker și HTTPS automat (Caddy).
 #
 # Folosire (din folderul proiectului):
 #   sudo bash deploy/install.sh
 #
 # Ce face:
 #   1. instalează Docker (dacă lipsește);
-#   2. te întreabă domeniul aplicației (ex. ai.datix.ro) și e-mailul pentru certificat;
+#   2. te întreabă domeniul aplicației (ex. dax.datix.ro) și e-mailul pentru certificat;
 #   3. creează fișierul .env cu o cheie de criptare generată aleator;
 #   4. pornește aplicația și îți afișează adresa pentru prima configurare.
 # Rularea repetată e sigură: păstrează .env și datele existente.
@@ -22,9 +22,9 @@ warn() { printf '\033[33m  ! %s\033[0m\n' "$*"; }
 fail() { printf '\033[31m  ✗ %s\033[0m\n' "$*" >&2; exit 1; }
 
 [ "$(id -u)" -eq 0 ] || fail "Rulează cu sudo: sudo bash deploy/install.sh"
-[ -f "$ROOT/docker-compose.yml" ] || fail "Rulează scriptul din folderul proiectului Datix AI."
+[ -f "$ROOT/docker-compose.yml" ] || fail "Rulează scriptul din folderul proiectului DAX."
 
-bold "Datix AI — instalare"
+bold "DAX — instalare"
 
 # ------------------------------------------------------------------ 1. Docker
 if ! command -v docker >/dev/null 2>&1; then
@@ -41,8 +41,8 @@ info "Docker: $(docker --version)"
 random_key() { od -An -N"$1" -tx1 /dev/urandom | tr -d ' \n'; }
 
 if [ ! -f .env ]; then
-  read -r -p "  Domeniul aplicației [ai.datix.ro]: " DOMAIN
-  DOMAIN="${DOMAIN:-ai.datix.ro}"
+  read -r -p "  Domeniul aplicației [dax.datix.ro]: " DOMAIN
+  DOMAIN="${DOMAIN:-dax.datix.ro}"
   read -r -p "  E-mail pentru certificatul HTTPS [contact@datix.ro]: " ACME_EMAIL
   ACME_EMAIL="${ACME_EMAIL:-contact@datix.ro}"
   [[ "$DOMAIN" =~ ^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]] || fail "Domeniu invalid: $DOMAIN"
@@ -96,7 +96,7 @@ done
 [ "${READY:-0}" = 1 ] || { docker compose logs --tail 50 app; fail "Aplicația nu a pornit. Vezi mesajele de mai sus."; }
 
 echo
-bold "Gata! Datix AI rulează."
+bold "Gata! DAX rulează."
 echo
 echo "  1. Deschide pe iPhone, în Safari:"
 echo "       https://${DOMAIN}/setup?token=${SETUP_TOKEN}"

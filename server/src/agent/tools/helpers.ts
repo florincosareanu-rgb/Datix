@@ -28,7 +28,7 @@ export function needCf(ctx: ToolContext): CloudflareApi {
 
 export function needWp(ctx: ToolContext): WordPressApi {
   const c = ctx.services.integrations.wordpress();
-  if (!c) throw new ToolFailure('Pluginul WordPress Datix AI nu e conectat (Setări → Integrări → WordPress).');
+  if (!c) throw new ToolFailure('Pluginul WordPress DAX nu e conectat (Setări → Integrări → WordPress).');
   return c;
 }
 

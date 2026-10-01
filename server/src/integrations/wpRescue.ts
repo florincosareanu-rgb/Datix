@@ -20,16 +20,16 @@ export interface RescueConfig {
   updated_at: string;
 }
 
-export const RESCUE_FILENAME = 'datix-ai-rescue.php';
-const MARK_START = '/*DATIX_AI_CONFIG:';
-const MARK_END = ':DATIX_AI_CONFIG*/';
+export const RESCUE_FILENAME = 'dax-rescue.php';
+const MARK_START = '/*DAX_CONFIG:';
+const MARK_END = ':DAX_CONFIG*/';
 
 export function defaultRescueConfig(): RescueConfig {
   return {
     disabled_plugins: [],
     theme: null,
     capture_errors: false,
-    error_log: `datix-ai-errors-${randomBytes(8).toString('hex')}.log`,
+    error_log: `dax-errors-${randomBytes(8).toString('hex')}.log`,
     maintenance: false,
     maintenance_message: 'Site-ul este în mentenanță pentru câteva minute. Revenim imediat!',
     updated_at: new Date().toISOString(),
@@ -40,37 +40,37 @@ export function renderRescuePlugin(cfg: RescueConfig): string {
   const encoded = Buffer.from(JSON.stringify(cfg), 'utf8').toString('base64');
   return `<?php
 /**
- * Plugin Name: Datix AI Rescue (generat automat)
- * Description: Măsuri temporare aplicate de agentul Datix AI pentru a repune site-ul pe picioare. Șterge acest fișier pentru a anula toate măsurile.
+ * Plugin Name: DAX Rescue (generat automat)
+ * Description: Măsuri temporare aplicate de agentul DAX pentru a repune site-ul pe picioare. Șterge acest fișier pentru a anula toate măsurile.
  * Version: 1.0
  */
 if (!defined('ABSPATH')) { exit; }
 
 ${MARK_START}${encoded}${MARK_END}
-$datix_ai_rescue = json_decode(base64_decode('${encoded}'), true);
-if (!is_array($datix_ai_rescue)) { return; }
+$dax_rescue = json_decode(base64_decode('${encoded}'), true);
+if (!is_array($dax_rescue)) { return; }
 
 // 1. Capturarea erorilor PHP într-un fișier privat (nume aleator)
-if (!empty($datix_ai_rescue['capture_errors'])) {
-    $datix_ai_log = WP_CONTENT_DIR . '/' . basename((string) $datix_ai_rescue['error_log']);
+if (!empty($dax_rescue['capture_errors'])) {
+    $dax_log = WP_CONTENT_DIR . '/' . basename((string) $dax_rescue['error_log']);
     @ini_set('log_errors', '1');
     @ini_set('display_errors', '0');
-    @ini_set('error_log', $datix_ai_log);
+    @ini_set('error_log', $dax_log);
     error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
-    register_shutdown_function(function () use ($datix_ai_log) {
+    register_shutdown_function(function () use ($dax_log) {
         $e = error_get_last();
         if ($e && in_array($e['type'], array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR), true)) {
             $uri = isset($_SERVER['REQUEST_URI']) ? substr((string) $_SERVER['REQUEST_URI'], 0, 200) : '';
-            @error_log('[DATIX-AI-FATAL] ' . $e['message'] . ' in ' . $e['file'] . ':' . $e['line'] . ' URI=' . $uri . "\\n", 3, $datix_ai_log);
+            @error_log('[DAX-FATAL] ' . $e['message'] . ' in ' . $e['file'] . ':' . $e['line'] . ' URI=' . $uri . "\\n", 3, $dax_log);
         }
     });
 }
 
 // 2. Dezactivarea temporară a pluginurilor defecte (fără a le modifica fișierele)
-if (!empty($datix_ai_rescue['disabled_plugins']) && is_array($datix_ai_rescue['disabled_plugins'])) {
-    $datix_ai_filter = function ($plugins) use ($datix_ai_rescue) {
+if (!empty($dax_rescue['disabled_plugins']) && is_array($dax_rescue['disabled_plugins'])) {
+    $dax_filter = function ($plugins) use ($dax_rescue) {
         if (!is_array($plugins)) { return $plugins; }
-        $blocked = $datix_ai_rescue['disabled_plugins'];
+        $blocked = $dax_rescue['disabled_plugins'];
         $is_assoc = array_keys($plugins) !== range(0, count($plugins) - 1);
         $out = array();
         foreach ($plugins as $k => $v) {
@@ -84,28 +84,28 @@ if (!empty($datix_ai_rescue['disabled_plugins']) && is_array($datix_ai_rescue['d
         }
         return $is_assoc ? $out : array_values($out);
     };
-    add_filter('option_active_plugins', $datix_ai_filter, 1);
-    add_filter('site_option_active_sitewide_plugins', $datix_ai_filter, 1);
+    add_filter('option_active_plugins', $dax_filter, 1);
+    add_filter('site_option_active_sitewide_plugins', $dax_filter, 1);
 }
 
 // 3. Temă de siguranță
-if (!empty($datix_ai_rescue['theme'])) {
-    $datix_ai_theme = basename((string) $datix_ai_rescue['theme']);
-    if (is_dir(WP_CONTENT_DIR . '/themes/' . $datix_ai_theme)) {
-        $datix_ai_theme_cb = function () use ($datix_ai_theme) { return $datix_ai_theme; };
-        add_filter('pre_option_template', $datix_ai_theme_cb, 1);
-        add_filter('pre_option_stylesheet', $datix_ai_theme_cb, 1);
+if (!empty($dax_rescue['theme'])) {
+    $dax_theme = basename((string) $dax_rescue['theme']);
+    if (is_dir(WP_CONTENT_DIR . '/themes/' . $dax_theme)) {
+        $dax_theme_cb = function () use ($dax_theme) { return $dax_theme; };
+        add_filter('pre_option_template', $dax_theme_cb, 1);
+        add_filter('pre_option_stylesheet', $dax_theme_cb, 1);
     }
 }
 
 // 4. Pagină de mentenanță pentru vizitatori (administratorii și wp-admin funcționează în continuare)
-if (!empty($datix_ai_rescue['maintenance'])) {
-    $datix_ai_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '';
-    $datix_ai_is_admin_path = (strpos($datix_ai_uri, '/wp-admin') !== false) || (strpos($datix_ai_uri, 'wp-login.php') !== false) || (strpos($datix_ai_uri, '/wp-json/datix-ai/') !== false) || (strpos($datix_ai_uri, 'rest_route=/datix-ai') !== false);
-    $datix_ai_logged = false;
-    foreach (array_keys($_COOKIE) as $c) { if (strpos($c, 'wordpress_logged_in_') === 0) { $datix_ai_logged = true; break; } }
-    if (!$datix_ai_is_admin_path && !$datix_ai_logged && (!defined('WP_CLI') || !WP_CLI) && php_sapi_name() !== 'cli') {
-        $datix_ai_msg = htmlspecialchars((string) $datix_ai_rescue['maintenance_message'], ENT_QUOTES, 'UTF-8');
+if (!empty($dax_rescue['maintenance'])) {
+    $dax_uri = isset($_SERVER['REQUEST_URI']) ? rawurldecode((string) $_SERVER['REQUEST_URI']) : '';
+    $dax_is_admin_path = (strpos($dax_uri, '/wp-admin') !== false) || (strpos($dax_uri, 'wp-login.php') !== false) || (strpos($dax_uri, '/wp-json/dax/') !== false) || (strpos($dax_uri, 'rest_route=/dax/') !== false);
+    $dax_logged = false;
+    foreach (array_keys($_COOKIE) as $c) { if (strpos($c, 'wordpress_logged_in_') === 0) { $dax_logged = true; break; } }
+    if (!$dax_is_admin_path && !$dax_logged && (!defined('WP_CLI') || !WP_CLI) && php_sapi_name() !== 'cli') {
+        $dax_msg = htmlspecialchars((string) $dax_rescue['maintenance_message'], ENT_QUOTES, 'UTF-8');
         if (!headers_sent()) {
             header('HTTP/1.1 503 Service Unavailable');
             header('Retry-After: 600');
@@ -114,7 +114,7 @@ if (!empty($datix_ai_rescue['maintenance'])) {
         }
         echo '<!doctype html><html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mentenanță</title>'
             . '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;background:#f7f7f5;color:#1f2937}main{max-width:520px;padding:32px;text-align:center}h1{font-size:1.5rem}</style>'
-            . '</head><body><main><h1>Revenim imediat</h1><p>' . $datix_ai_msg . '</p></main></body></html>';
+            . '</head><body><main><h1>Revenim imediat</h1><p>' . $dax_msg . '</p></main></body></html>';
         exit;
     }
 }

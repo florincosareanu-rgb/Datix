@@ -106,7 +106,7 @@ describe('acțiunile sensibile cer confirmare', () => {
     expect(zip.rawPayload.subarray(0, 2).toString()).toBe('PK');
     const hook = await app.inject({ method: 'GET', url: '/api/downloads/whmcs-hook.php', headers: { cookie } });
     expect(hook.statusCode).toBe(200);
-    expect(hook.body).toContain(`define('DATIX_AI_SECRET', '${s.secrets.get('whmcs.webhookSecret')}');`);
+    expect(hook.body).toContain(`define('DAX_SECRET', '${s.secrets.get('whmcs.webhookSecret')}');`);
   });
 });
 

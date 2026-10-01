@@ -9,7 +9,7 @@ export function AboutTab() {
   return (
     <>
       <Card className="mb-5">
-        <CardHeader title="Datix AI" subtitle={`Versiunea ${data?.version ?? '—'}${data?.demoMode ? ' · mod demo' : ''}`} icon={<Info className="size-4" />} />
+        <CardHeader title="DAX" subtitle={`Versiunea ${data?.version ?? '—'}${data?.demoMode ? ' · mod demo' : ''}`} icon={<Info className="size-4" />} />
         <div className="space-y-2 px-4 pb-4 text-sm text-ink-2 sm:px-5">
           <p>Agent de operațiuni pentru datix.ro și my.datix.ro: monitorizează, investighează, repară și răspunde la tichete — cu aprobarea ta acolo unde contează.</p>
         </div>

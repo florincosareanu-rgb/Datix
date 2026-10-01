@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Actualizează Datix AI la ultima versiune de pe GitHub și repornește aplicația.
+# Actualizează DAX la ultima versiune de pe GitHub și repornește aplicația.
 # Datele (data/) și configurarea (.env) rămân neschimbate; baza de date are copie zilnică în data/backups.
 #
 # Folosire: sudo bash deploy/update.sh

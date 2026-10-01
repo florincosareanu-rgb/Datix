@@ -147,7 +147,7 @@ export class Notifier {
 
   async sendTest(): Promise<number> {
     const n = this.subscriptionCount();
-    await this.notify({ kind: 'system', title: 'Notificare de test', body: 'Notificările Datix AI funcționează pe acest dispozitiv. ✅', priority: 'normal', url: '/' });
+    await this.notify({ kind: 'system', title: 'Notificare de test', body: 'Notificările DAX funcționează pe acest dispozitiv. ✅', priority: 'normal', url: '/' });
     return n;
   }
 

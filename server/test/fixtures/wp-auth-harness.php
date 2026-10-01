@@ -1,6 +1,6 @@
 <?php
 /**
- * Mini-WordPress pentru teste: doar funcțiile folosite de Datix_AI_Auth / Datix_AI_Config.
+ * Mini-WordPress pentru teste: doar funcțiile folosite de DAX_Auth / DAX_Config.
  * Intrare (stdin, JSON): { secret, mode: "verify"|"sign", requests?: [...], path?, body? }
  * Ieșire (stdout, JSON).
  */
@@ -46,21 +46,21 @@ class Test_Request
 }
 
 $input = json_decode(stream_get_contents(STDIN), true);
-define('DATIX_AI_SECRET', $input['secret']);
+define('DAX_SECRET', $input['secret']);
 
-$root = dirname(__DIR__, 3) . '/integrations/wordpress/datix-ai-connector/includes/';
-require $root . 'class-datix-ai-config.php';
-require $root . 'class-datix-ai-auth.php';
+$root = dirname(__DIR__, 3) . '/integrations/wordpress/dax-connector/includes/';
+require $root . 'class-dax-config.php';
+require $root . 'class-dax-auth.php';
 
 if ($input['mode'] === 'sign') {
-    echo json_encode(Datix_AI_Auth::sign_headers('POST', $input['path'], $input['body']));
+    echo json_encode(DAX_Auth::sign_headers('POST', $input['path'], $input['body']));
     exit;
 }
 
 $out = array();
 foreach ($input['requests'] as $r) {
-    Datix_AI_Auth::$agent_request = false;
-    $res = Datix_AI_Auth::permission(new Test_Request($r['headers'], $r['route'], $r['body']));
-    $out[] = $res === true ? array('ok' => true, 'agent' => Datix_AI_Auth::$agent_request) : array('ok' => false, 'status' => $res->data['status'], 'message' => $res->message);
+    DAX_Auth::$agent_request = false;
+    $res = DAX_Auth::permission(new Test_Request($r['headers'], $r['route'], $r['body']));
+    $out[] = $res === true ? array('ok' => true, 'agent' => DAX_Auth::$agent_request) : array('ok' => false, 'status' => $res->data['status'], 'message' => $res->message);
 }
 echo json_encode($out);

@@ -116,7 +116,7 @@ const WORDPRESS_PROBES: ExposureProbe[] = [
     path: '/wp-json/wp/v2/users',
     severity: 'low',
     title: 'Lista utilizatorilor WordPress e publică (enumerare utilizatori)',
-    recommendation: 'Restricționează endpoint-ul /wp/v2/users pentru vizitatori (pluginul Datix AI poate face asta) — ajută atacatorii la ghicirea parolelor.',
+    recommendation: 'Restricționează endpoint-ul /wp/v2/users pentru vizitatori (pluginul DAX poate face asta) — ajută atacatorii la ghicirea parolelor.',
     confirm: (r) => ok(r) && /^\s*\[\s*\{.*"slug"/s.test(text(r)),
   },
   {
@@ -257,7 +257,7 @@ export async function securityScan(url: string, kind: SecurityScanResult['kind']
   }
 
   // Răspunsul pentru o adresă inexistentă — ca să detectăm paginile 404 „moi” (care răspund 200)
-  const randomPath = `/datix-ai-${randomBytes(6).toString('hex')}.txt`;
+  const randomPath = `/dax-${randomBytes(6).toString('hex')}.txt`;
   const baseline = await httpCheck({ url: origin + randomPath, timeoutMs: 15_000, followRedirects: 0 }).catch(() => null);
   const baselineLen = baseline?.bodyBytes ?? -1;
 
@@ -287,7 +287,7 @@ export async function securityScan(url: string, kind: SecurityScanResult['kind']
         severity: 'low',
         title: 'XML-RPC e activ',
         details: 'xmlrpc.php e folosit des pentru atacuri de ghicire a parolelor și DDoS.',
-        recommendation: 'Dezactivează XML-RPC dacă nu folosești aplicația mobilă WordPress sau Jetpack (pluginul Datix AI îl poate bloca).',
+        recommendation: 'Dezactivează XML-RPC dacă nu folosești aplicația mobilă WordPress sau Jetpack (pluginul DAX îl poate bloca).',
       });
     }
   }
