@@ -1,0 +1,253 @@
+@import 'tailwindcss';
+
+/* Tema se alege prin atributul data-theme de pe <html> (setat din public/theme.js). */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-page: #f9f9f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f3ef;
+  --color-surface-3: #ebeae4;
+  --color-ink: #0b0b0b;
+  --color-ink-2: #52514e;
+  --color-ink-3: #898781;
+  --color-line: #e1e0d9;
+  --color-line-strong: #c3c2b7;
+
+  --color-accent: #2a78d6;
+  --color-accent-hover: #256abf;
+  --color-accent-ink: #ffffff;
+  --color-accent-soft: #e8f1fc;
+
+  /* paleta de stare (fixă) — mereu însoțită de pictogramă + text */
+  --color-good: #0ca30c;
+  --color-good-ink: #006300;
+  --color-good-soft: #e9f6e9;
+  --color-warning: #fab219;
+  --color-warning-ink: #7a5000;
+  --color-warning-soft: #fff5de;
+  --color-serious: #ec835a;
+  --color-serious-ink: #a3401a;
+  --color-serious-soft: #fdefe8;
+  --color-critical: #d03b3b;
+  --color-critical-ink: #b42323;
+  --color-critical-soft: #fbebeb;
+
+  /* grafice */
+  --color-chart-1: #2a78d6;
+  --color-chart-grid: #e1e0d9;
+  --color-chart-axis: #c3c2b7;
+}
+
+[data-theme='dark'] {
+  --color-page: #121211;
+  --color-surface: #1a1a19;
+  --color-surface-2: #232322;
+  --color-surface-3: #2d2d2b;
+  --color-ink: #ffffff;
+  --color-ink-2: #c3c2b7;
+  --color-ink-3: #8f8d86;
+  --color-line: #2c2c2a;
+  --color-line-strong: #3d3d3a;
+  --color-accent: #3987e5;
+  --color-accent-hover: #5598e7;
+  --color-accent-soft: #1b2a3e;
+  --color-good-ink: #3fc23f;
+  --color-good-soft: #142616;
+  --color-warning-ink: #fab219;
+  --color-warning-soft: #2c2410;
+  --color-serious-ink: #ec835a;
+  --color-serious-soft: #2e1d15;
+  --color-critical-ink: #e66767;
+  --color-critical-soft: #2f1717;
+  --color-chart-1: #3987e5;
+  --color-chart-grid: #2c2c2a;
+  --color-chart-axis: #383835;
+  color-scheme: dark;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-page text-ink font-sans antialiased;
+  font-size: 15px;
+  line-height: 1.5;
+  overscroll-behavior-y: none;
+}
+
+/* iOS: câmpurile sub 16px fac zoom la focus */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+/* --------------------------------------------------------------- text Markdown al agentului */
+.prose-chat {
+  overflow-wrap: anywhere;
+}
+.prose-chat > :first-child {
+  margin-top: 0;
+}
+.prose-chat > :last-child {
+  margin-bottom: 0;
+}
+.prose-chat p {
+  margin: 0.55em 0;
+}
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3,
+.prose-chat h4 {
+  font-weight: 650;
+  margin: 1.1em 0 0.4em;
+  line-height: 1.3;
+}
+.prose-chat h1 {
+  font-size: 1.25em;
+}
+.prose-chat h2 {
+  font-size: 1.12em;
+}
+.prose-chat h3,
+.prose-chat h4 {
+  font-size: 1.02em;
+}
+.prose-chat ul,
+.prose-chat ol {
+  margin: 0.5em 0;
+  padding-left: 1.35em;
+}
+.prose-chat ul {
+  list-style: disc;
+}
+.prose-chat ol {
+  list-style: decimal;
+}
+.prose-chat li {
+  margin: 0.2em 0;
+}
+.prose-chat a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-chat strong {
+  font-weight: 650;
+}
+.prose-chat code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  padding: 0.05em 0.35em;
+}
+.prose-chat pre {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  padding: 0.8em 0.9em;
+  overflow-x: auto;
+  margin: 0.7em 0;
+  font-size: 0.86em;
+  line-height: 1.45;
+}
+.prose-chat pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+.prose-chat table {
+  border-collapse: collapse;
+  margin: 0.7em 0;
+  font-size: 0.92em;
+  display: block;
+  overflow-x: auto;
+}
+.prose-chat th,
+.prose-chat td {
+  border: 1px solid var(--color-line);
+  padding: 0.35em 0.6em;
+  text-align: left;
+}
+.prose-chat th {
+  background: var(--color-surface-2);
+  font-weight: 600;
+}
+.prose-chat blockquote {
+  border-left: 3px solid var(--color-line-strong);
+  padding-left: 0.8em;
+  color: var(--color-ink-2);
+  margin: 0.6em 0;
+}
+.prose-chat hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin: 1em 0;
+}
+
+@keyframes pulse-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.typing-dot {
+  animation: pulse-dot 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

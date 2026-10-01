@@ -1,0 +1,50 @@
+import type { Config } from './config';
+import type { DB } from './db';
+import type { Logger } from './logger';
+import type { EventBus } from './events';
+import type { SettingsService } from './settings/service';
+import type { SecretsService } from './settings/secrets';
+import type { AuditService } from './audit';
+import type { Integrations } from './integrations';
+import type { LlmService } from './llm/service';
+import type { AuthService } from './auth/service';
+import type { Notifier } from './notifications/notifier';
+import type { ConversationStore } from './agent/conversations';
+import type { ApprovalService } from './agent/approvals';
+import type { AgentRunner } from './agent/runner';
+import type { MonitoringService } from './monitoring/service';
+import type { IncidentService } from './monitoring/incidents';
+import type { FindingsService } from './monitoring/findings';
+import type { TicketService } from './tickets/service';
+import type { ReportService } from './reports/service';
+import type { KnowledgeBase } from './knowledge/kb';
+import type { MemoryStore } from './knowledge/memory';
+import type { FileBackupStore } from './knowledge/fileBackups';
+import type { BusinessService } from './monitoring/business';
+
+/** Containerul serviciilor aplicației (injectare simplă de dependențe). */
+export interface Services {
+  config: Config;
+  db: DB;
+  log: Logger;
+  bus: EventBus;
+  settings: SettingsService;
+  secrets: SecretsService;
+  audit: AuditService;
+  integrations: Integrations;
+  llm: LlmService;
+  auth: AuthService;
+  notifier: Notifier;
+  conversations: ConversationStore;
+  approvals: ApprovalService;
+  agent: AgentRunner;
+  monitoring: MonitoringService;
+  incidents: IncidentService;
+  findings: FindingsService;
+  tickets: TicketService;
+  reports: ReportService;
+  kb: KnowledgeBase;
+  memory: MemoryStore;
+  fileBackups: FileBackupStore;
+  business: BusinessService;
+}
