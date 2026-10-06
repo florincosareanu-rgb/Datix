@@ -37,10 +37,13 @@ export function defineTool<S extends z.ZodType>(def: ToolDef<S>): ToolDef<S> {
 
 export type AnyTool = ToolDef<z.ZodType>;
 
-export const ALL_CONTEXTS: AgentContext[] = ['owner', 'incident', 'ticket', 'report'];
-export const OPS: AgentContext[] = ['owner', 'incident'];
+export const ALL_CONTEXTS: AgentContext[] = ['owner', 'incident', 'ticket', 'report', 'mission'];
+/** Operațiuni: chat, incidente și misiuni programate (în misiuni, modificările trec prin politica de autonomie). */
+export const OPS: AgentContext[] = ['owner', 'incident', 'mission'];
 export const OWNER_ONLY: AgentContext[] = ['owner'];
-export const READ_EVERYWHERE: AgentContext[] = ['owner', 'incident', 'ticket'];
+export const READ_EVERYWHERE: AgentContext[] = ['owner', 'incident', 'ticket', 'mission'];
+/** Citire pentru proprietar, rapoarte și misiuni (cifre de business). */
+export const OWNER_REPORTS: AgentContext[] = ['owner', 'report', 'mission'];
 
 export function toJsonSchema(schema: z.ZodType): Record<string, unknown> {
   const js = z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' }) as Record<string, unknown>;

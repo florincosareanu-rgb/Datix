@@ -4,7 +4,9 @@ import type { FindingInput } from './findings';
 import { summarizeHttpCheck } from '../integrations/net/httpCheck';
 import { diffDns, type DnsSnapshot } from '../integrations/net/dns';
 import { safeJsonParse, errorMessage } from '../util/text';
-import { DAY, HOUR, MINUTE } from '../util/time';
+import { DAY, HOUR, MINUTE, formatDurationRo } from '../util/time';
+import { runIntegrity } from '../maintenance/integrity';
+import { formatBytes } from '../backups/service';
 
 export interface MonitorRow {
   id: string;
@@ -483,6 +485,43 @@ const resellerAccountsCheck: CheckFn = async (s) => {
   return { status: 'up', latencyMs: null, message: `${users.length} conturi de clienți verificate; ${findings.length} atenționări.` };
 };
 
+const backupCheck: CheckFn = async (s) => {
+  if (!s.settings.get().backups.enabled) return { status: 'unknown', latencyMs: null, message: 'Backup-ul zilnic verificat e oprit.' };
+  const last = s.backups.runs(1)[0] ?? null;
+  const ok = s.backups.lastOk();
+  if (!ok) {
+    return {
+      status: last?.status === 'failed' ? 'down' : 'unknown',
+      latencyMs: null,
+      message: last ? (last.status === 'running' ? 'Prima rulare e în curs…' : `Ultima rulare a eșuat: ${last.error ?? 'eroare'}`) : 'Încă nicio copie verificată (prima rulare e programată).',
+    };
+  }
+  const age = Date.now() - ok.startedAt;
+  const status = age > 50 * HOUR ? 'down' : age > 26 * HOUR || last?.status === 'failed' || ok.status === 'warning' ? 'degraded' : 'up';
+  return {
+    status,
+    latencyMs: null,
+    message: `Ultima copie verificată acum ${formatDurationRo(age)} · ${formatBytes(ok.sizeBytes)}${ok.encrypted ? ' · criptată' : ''} · ${ok.destination ?? ''}${last && last.status === 'failed' ? ` · ultima rulare a eșuat: ${last.error ?? ''}` : ''}`,
+    details: { last, ok },
+  };
+};
+
+const wpIntegrityCheck: CheckFn = async (s) => {
+  const r = await runIntegrity(s);
+  s.findings.report('integrity', r.findings);
+  return { status: r.ok ? 'up' : 'degraded', latencyMs: null, message: r.message, details: r.details };
+};
+
+const emailDeliveryCheck: CheckFn = async (s) => {
+  const r = await s.email.check();
+  return { status: r.status, latencyMs: null, message: r.message, details: r.details };
+};
+
+const efacturaCheck: CheckFn = async (s) => {
+  const r = await s.efactura.check();
+  return { status: r.status, latencyMs: null, message: r.message, details: r.details };
+};
+
 export const CHECKS: Record<MonitorKind, CheckFn> = {
   http: httpCheck,
   tls: tlsCheck,
@@ -499,6 +538,10 @@ export const CHECKS: Record<MonitorKind, CheckFn> = {
   tickets_poll: ticketsPollCheck,
   cloudflare_security: cfSecurityCheck,
   reseller_accounts: resellerAccountsCheck,
+  backup: backupCheck,
+  wp_integrity: wpIntegrityCheck,
+  email_delivery: emailDeliveryCheck,
+  efactura: efacturaCheck,
 };
 
 export async function runCheck(s: Services, m: MonitorRow): Promise<CheckOutcome> {

@@ -5,6 +5,7 @@ import { buildServices } from './container';
 import { buildApp } from './http/app';
 import { startScheduler } from './scheduler';
 import { demoRoutes } from './demo/routes';
+import { demoWarmup } from './demo/automation';
 
 async function main() {
   const config = loadConfig();
@@ -21,6 +22,7 @@ async function main() {
     services.monitoring.start();
     services.tickets.resumeQueue();
     stopScheduler = startScheduler(services);
+    if (config.demoMode) demoWarmup(services);
   }
 
   log.info({ url: config.appUrl, port: config.port, demo: config.demoMode }, `DAX ${config.version} a pornit`);

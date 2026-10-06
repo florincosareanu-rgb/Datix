@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+import { createWriteStream } from 'node:fs';
+import { unlink } from 'node:fs/promises';
 import { IntegrationError } from './http';
 import { decodeHtmlEntities, toNumber } from '../util/text';
 import type { DirectAdminApi } from './types';
@@ -118,6 +121,60 @@ export class DirectAdminClient {
     return Buffer.from(await res.arrayBuffer());
   }
 
+  /**
+   * Descarcă un fișier mare direct pe disc (ex. arhiva de backup), cu sumă SHA-256.
+   * Se oprește dacă nu mai vin date timp de `idleMs` (nu are limită totală de timp).
+   */
+  async downloadToFile(path: string, dest: string, opts: { idleMs?: number; onProgress?: (bytes: number) => void; signal?: AbortSignal } = {}): Promise<{ bytes: number; sha256: string }> {
+    const url = new URL(this.base + '/api/filemanager/download');
+    url.searchParams.set('path', path);
+    const controller = new AbortController();
+    const onAbort = () => controller.abort();
+    opts.signal?.addEventListener('abort', onAbort);
+    let idle: NodeJS.Timeout | null = null;
+    const arm = () => {
+      if (idle) clearTimeout(idle);
+      idle = setTimeout(() => controller.abort(), opts.idleMs ?? 120_000);
+    };
+    arm();
+    const hash = createHash('sha256');
+    let bytes = 0;
+    try {
+      let res: Response;
+      try {
+        res = await fetch(url, { headers: { Authorization: this.auth }, signal: controller.signal });
+      } catch (err) {
+        throw new IntegrationError(this.label, `descărcare ${path}: conexiune eșuată (${(err as Error).message})`, null, true);
+      }
+      this.checkAuth(res, 'filemanager');
+      if (res.status === 404) throw new IntegrationError(this.label, `fișierul nu există: ${path}`, 404);
+      if (!res.ok || !res.body) throw new IntegrationError(this.label, `descărcare ${path}: HTTP ${res.status}`, res.status);
+      const out = createWriteStream(dest);
+      try {
+        for await (const chunk of res.body as unknown as AsyncIterable<Uint8Array>) {
+          arm();
+          const buf = Buffer.from(chunk);
+          hash.update(buf);
+          bytes += buf.length;
+          if (!out.write(buf)) await new Promise<void>((r) => out.once('drain', () => r()));
+          opts.onProgress?.(bytes);
+        }
+      } finally {
+        await new Promise<void>((resolve, reject) => out.end((err?: Error | null) => (err ? reject(err) : resolve())));
+      }
+      return { bytes, sha256: hash.digest('hex') };
+    } catch (err) {
+      await unlink(dest).catch(() => undefined);
+      if (controller.signal.aborted && !(err instanceof IntegrationError)) {
+        throw new IntegrationError(this.label, `descărcarea ${path} s-a oprit (fără date ${Math.round((opts.idleMs ?? 120_000) / 1000)} s sau anulată)`, null, true);
+      }
+      throw err;
+    } finally {
+      if (idle) clearTimeout(idle);
+      opts.signal?.removeEventListener('abort', onAbort);
+    }
+  }
+
   async readText(path: string, maxBytes = 256 * 1024): Promise<{ path: string; sizeBytes: number; truncated: boolean; binary: boolean; content: string }> {
     const bytes = await this.downloadFile(path);
     const truncated = bytes.length > maxBytes;
@@ -154,6 +211,11 @@ export class DirectAdminClient {
   /** Mută în coșul contului (recuperabil din panou), nu șterge definitiv. */
   async trash(paths: string[]): Promise<void> {
     await this.request('/api/filemanager-actions/remove', { method: 'POST', body: { paths, trash: true } });
+  }
+
+  /** Ștergere definitivă (folosită doar pentru backup-urile create de DAX, după ce au fost copiate în altă parte). */
+  async removePermanently(paths: string[]): Promise<void> {
+    await this.request('/api/filemanager-actions/remove', { method: 'POST', body: { paths, trash: false } });
   }
 
   async exists(path: string): Promise<boolean> {
@@ -292,6 +354,12 @@ export class DirectAdminClient {
 
   async listEmailAccounts(domain: string): Promise<string[]> {
     return DirectAdminClient.asList(await this.legacy('CMD_API_POP', { action: 'list', domain }));
+  }
+
+  /** Creează o căsuță de e-mail (ex. pentru testele de livrare și rapoartele DMARC). */
+  async createEmailAccount(domain: string, user: string, password: string, quotaMb = 200): Promise<void> {
+    if (!/^[a-z0-9._-]{1,64}$/i.test(user)) throw new IntegrationError(this.label, `nume de căsuță invalid: ${user}`);
+    await this.legacy('CMD_API_POP', { action: 'create', domain, user, passwd: password, passwd2: password, quota: quotaMb, limit: 0 }, 'POST');
   }
 
   async dnsRecords(domain: string): Promise<unknown> {

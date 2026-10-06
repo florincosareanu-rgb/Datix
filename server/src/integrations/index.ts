@@ -7,7 +7,12 @@ import { CloudflareClient } from './cloudflare';
 import { WordPressConnector } from './wordpress';
 import { WpRescue } from './wpRescue';
 import { realNet } from './net';
-import type { CloudflareApi, DirectAdminApi, NetApi, WhmcsApi, WordPressApi } from './types';
+import { S3Client } from './s3';
+import { MailboxClient } from './mailbox';
+import { AnafClient } from './anaf';
+import { SearchConsoleClient } from './gsc';
+import { LocalStorage, S3Storage, type BackupStorage } from '../backups/storage';
+import type { AnafApi, CloudflareApi, DirectAdminApi, GscApi, MailboxApi, NetApi, WhmcsApi, WordPressApi } from './types';
 import { errorMessage } from '../util/text';
 
 export interface DemoProviders {
@@ -17,6 +22,9 @@ export interface DemoProviders {
   reseller: DirectAdminApi;
   cloudflare: CloudflareApi;
   wordpress: WordPressApi;
+  mailbox: MailboxApi;
+  anaf: (accessToken: string) => AnafApi;
+  gsc: GscApi;
 }
 
 /**
@@ -25,12 +33,14 @@ export interface DemoProviders {
  */
 export class Integrations {
   readonly net: NetApi;
-  private llmTester: (() => Promise<string>) | null = null;
+  private readonly testers = new Map<IntegrationKey, () => Promise<string>>();
 
   constructor(
     private readonly settings: SettingsService,
     private readonly secrets: SecretsService,
     private readonly demo: DemoProviders | null = null,
+    /** directorul pentru copiile locale ale backup-urilor (pe serverul DAX) */
+    private readonly localBackupDir = '',
   ) {
     this.net = demo?.net ?? realNet;
   }
@@ -40,7 +50,12 @@ export class Integrations {
   }
 
   setLlmTester(fn: () => Promise<string>): void {
-    this.llmTester = fn;
+    this.testers.set('llm', fn);
+  }
+
+  /** Testele care au nevoie de alte servicii (ex. ANAF reîmprospătează tokenul). */
+  setTester(key: IntegrationKey, fn: () => Promise<string>): void {
+    this.testers.set(key, fn);
   }
 
   whmcs(): WhmcsApi | null {
@@ -96,6 +111,46 @@ export class Integrations {
     return this.secrets.get('pagespeed.apiKey');
   }
 
+  /** Destinația copiilor de backup (S3/R2 sau directorul local de pe serverul DAX). */
+  storage(): BackupStorage | null {
+    const b = this.settings.get().backups;
+    if (b.destination === 'local') return this.localBackupDir ? new LocalStorage(this.localBackupDir) : null;
+    const accessKeyId = this.secrets.get('storage.accessKeyId');
+    const secretAccessKey = this.secrets.get('storage.secretAccessKey');
+    if (!b.s3.endpoint || !b.s3.bucket || !accessKeyId || !secretAccessKey) return null;
+    const client = new S3Client({ endpoint: b.s3.endpoint, region: b.s3.region || 'auto', bucket: b.s3.bucket, accessKeyId, secretAccessKey, pathStyle: b.s3.pathStyle });
+    const prefix = b.s3.prefix && !b.s3.prefix.endsWith('/') ? `${b.s3.prefix}/` : b.s3.prefix;
+    return new S3Storage(client, prefix, b.s3.bucket);
+  }
+
+  /** Căsuța de monitorizare (teste de livrare + rapoarte DMARC). */
+  mailbox(): MailboxApi | null {
+    const e = this.settings.get().email;
+    if (this.demo) return e.enabled ? this.demo.mailbox : null;
+    const password = this.secrets.get('mailbox.password');
+    if (!e.mailbox || !e.imapHost || !password) return null;
+    return new MailboxClient({ host: e.imapHost, port: e.imapPort, user: e.mailbox, password });
+  }
+
+  /** Client ANAF cu un token de acces valid (tokenul îl gestionează serviciul e-Factura). */
+  anafClient(accessToken: string): AnafApi {
+    if (this.demo) return this.demo.anaf(accessToken);
+    return new AnafClient(accessToken, this.settings.get().efactura.environment);
+  }
+
+  /** Google Search Console (cont de serviciu). */
+  gsc(): GscApi | null {
+    const s = this.settings.get().seo;
+    if (this.demo) return s.enabled ? this.demo.gsc : null;
+    const json = this.secrets.get('gsc.serviceAccount');
+    if (!json) return null;
+    try {
+      return new SearchConsoleClient(json);
+    } catch {
+      return null;
+    }
+  }
+
   isConfigured(key: IntegrationKey): boolean {
     switch (key) {
       case 'llm':
@@ -112,17 +167,40 @@ export class Integrations {
         return !!this.wordpress();
       case 'pagespeed':
         return this.settings.get().integrations.pagespeed.enabled;
+      case 'storage':
+        return !!this.storage();
+      case 'mailbox':
+        return !!this.mailbox();
+      case 'anaf': {
+        const e = this.settings.get().efactura;
+        if (this.demo) return e.enabled;
+        return !!e.cif && !!e.clientId && this.secrets.has('anaf.clientSecret') && this.secrets.has('anaf.refreshToken');
+      }
+      case 'gsc':
+        return !!this.gsc() && !!this.settings.get().seo.property;
     }
   }
 
   isEnabled(key: IntegrationKey): boolean {
     const s = this.settings.get();
-    if (key === 'llm') return true;
-    return s.integrations[key].enabled;
+    switch (key) {
+      case 'llm':
+        return true;
+      case 'storage':
+        return s.backups.enabled;
+      case 'mailbox':
+        return s.email.enabled;
+      case 'anaf':
+        return s.efactura.enabled;
+      case 'gsc':
+        return s.seo.enabled;
+      default:
+        return s.integrations[key].enabled;
+    }
   }
 
   statuses(): IntegrationStatusDTO[] {
-    const keys: IntegrationKey[] = ['llm', 'whmcs', 'directadmin', 'cloudflare', 'wordpress', 'pagespeed', 'reseller'];
+    const keys: IntegrationKey[] = ['llm', 'whmcs', 'directadmin', 'cloudflare', 'wordpress', 'pagespeed', 'reseller', 'storage', 'mailbox', 'anaf', 'gsc'];
     return keys.map((key) => ({
       key,
       enabled: this.isEnabled(key),
@@ -145,9 +223,22 @@ export class Integrations {
 
   private async runTest(key: IntegrationKey): Promise<string> {
     switch (key) {
-      case 'llm': {
-        if (!this.llmTester) throw new Error('Modulul AI nu e pornit.');
-        return this.llmTester();
+      case 'llm':
+      case 'anaf':
+      case 'gsc': {
+        const tester = this.testers.get(key);
+        if (!tester) throw new Error('Modulul nu e pornit.');
+        return tester();
+      }
+      case 'storage': {
+        const st = this.storage();
+        if (!st) throw new Error('Completează adresa (endpoint), bucket-ul și cheile de acces, sau alege păstrarea pe serverul DAX.');
+        return st.test();
+      }
+      case 'mailbox': {
+        const m = this.mailbox();
+        if (!m) throw new Error('Completează adresa căsuței, serverul IMAP și parola, apoi activează verificarea e-mailurilor.');
+        return m.test();
       }
       case 'whmcs': {
         const c = this.whmcs();

@@ -9,6 +9,8 @@ import { cloudflareTools } from './cloudflare';
 import { whmcsTools } from './whmcs';
 import { resellerTools } from './reseller';
 import { submitTools } from './submit';
+import { missionTools } from './missions';
+import { automationTools } from './automation';
 
 export const ALL_TOOLS: AnyTool[] = [
   ...statusTools,
@@ -20,6 +22,8 @@ export const ALL_TOOLS: AnyTool[] = [
   ...whmcsTools,
   ...resellerTools,
   ...submitTools,
+  ...missionTools,
+  ...automationTools,
 ] as AnyTool[];
 
 const BY_NAME = new Map(ALL_TOOLS.map((t) => [t.name, t]));

@@ -75,6 +75,18 @@ export class MonitoringService {
     if (i.isConfigured('directadmin')) defs.push({ id: 'da-usage', kind: 'da_usage', name: 'Resurse hosting (disc, inode, trafic)', target: st.integrations.directadmin.username || 'DirectAdmin', intervalSec: 3600, config: {} });
     if (i.isConfigured('cloudflare')) defs.push({ id: 'cf-security', kind: 'cloudflare_security', name: 'Cloudflare (atacuri blocate)', target: st.integrations.cloudflare.zoneName, intervalSec: 3600, config: {} });
     if (i.isConfigured('reseller')) defs.push({ id: 'reseller-accounts', kind: 'reseller_accounts', name: 'Conturile clienților (reseller)', target: st.integrations.reseller.username, intervalSec: 3600, config: {} });
+    if (st.backups.enabled) {
+      defs.push({ id: 'backup', kind: 'backup', name: 'Backup verificat', target: st.backups.destination === 's3' ? st.backups.s3.bucket || 'S3' : 'serverul DAX', intervalSec: 3600, config: {} });
+    }
+    if (st.integrity.enabled && i.isConfigured('wordpress')) {
+      defs.push({ id: 'wp-integrity', kind: 'wp_integrity', name: 'Integritatea fișierelor WordPress', target: st.integrations.wordpress.url, intervalSec: 24 * 3600, config: {} });
+    }
+    if (st.email.enabled && i.isConfigured('mailbox')) {
+      defs.push({ id: 'email-delivery', kind: 'email_delivery', name: 'Livrarea e-mailurilor', target: st.email.mailbox, intervalSec: 6 * 3600, config: {} });
+    }
+    if (st.efactura.enabled && i.isConfigured('anaf')) {
+      defs.push({ id: 'efactura', kind: 'efactura', name: 'e-Factura (ANAF SPV)', target: st.efactura.cif || 'ANAF', intervalSec: 3 * 3600, config: {} });
+    }
     return defs;
   }
 
@@ -192,7 +204,7 @@ export class MonitoringService {
   }
 
   listMonitors(): MonitorDTO[] {
-    const order: MonitorKind[] = ['http', 'tls', 'domain', 'dns', 'wp_health', 'whmcs_health', 'da_usage', 'security_scan', 'wp_vulns', 'blacklist', 'pagespeed', 'cloudflare_security', 'business', 'tickets_poll', 'reseller_accounts'];
+    const order: MonitorKind[] = ['http', 'tls', 'domain', 'dns', 'wp_health', 'whmcs_health', 'da_usage', 'backup', 'security_scan', 'wp_integrity', 'wp_vulns', 'blacklist', 'email_delivery', 'pagespeed', 'cloudflare_security', 'business', 'efactura', 'tickets_poll', 'reseller_accounts'];
     return (this.s.db.prepare('SELECT * FROM monitors').all() as MonitorRow[])
       .sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || a.name.localeCompare(b.name))
       .map((m) => this.toDTO(m));

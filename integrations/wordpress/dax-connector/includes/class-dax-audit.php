@@ -158,6 +158,12 @@ final class DAX_Audit
         );
     }
 
+    /** Parcurgerea fișierelor PHP, disponibilă și pentru verificarea integrității pluginurilor. */
+    public static function walk_php($dir, $fn, $deadline, $max_files = 60000)
+    {
+        return self::walk($dir, $fn, $deadline, $max_files);
+    }
+
     /** Folosit din closure-uri (PHP 7.2 nu permite apelul metodelor private din closure statice). */
     public static function rel($path)
     {

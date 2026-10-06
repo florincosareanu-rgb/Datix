@@ -18,6 +18,7 @@ import { miscRoutes } from './routes/misc';
 import { webhookRoutes } from './routes/webhooks';
 import { eventRoutes } from './routes/events';
 import { downloadRoutes } from './routes/downloads';
+import { automationRoutes } from './routes/automation';
 
 const CSP = [
   "default-src 'self'",
@@ -111,6 +112,7 @@ export async function buildApp(s: Services): Promise<FastifyInstance> {
   webhookRoutes(app, s);
   eventRoutes(app, s);
   downloadRoutes(app, s);
+  automationRoutes(app, s);
 
   // interfața web (PWA)
   const dist = s.config.webDist;

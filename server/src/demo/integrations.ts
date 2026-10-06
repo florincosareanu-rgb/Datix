@@ -1,8 +1,12 @@
+import { createHash } from 'node:crypto';
+import { writeFile } from 'node:fs/promises';
+import { gzipSync } from 'node:zlib';
 import type { CloudflareApi, DirectAdminApi, WhmcsApi, WordPressApi } from '../integrations/types';
 import type { WhmcsTicket, WhmcsTicketReply, WhmcsTicketSummary } from '../integrations/whmcs';
 import type { DaFileEntry } from '../integrations/directadmin';
 import type { CfDnsRecord, SecurityLevel } from '../integrations/cloudflare';
-import type { WpHealth, WpPlugin } from '../integrations/wordpress';
+import type { WpHealth, WpPlugin, WpSnapshotItem } from '../integrations/wordpress';
+import { createTar } from '../backups/tarWriter';
 import { IntegrationError } from '../integrations/http';
 import { parseRescuePlugin, RESCUE_FILENAME } from '../integrations/wpRescue';
 import { demoState, wpIsBroken } from './state';
@@ -10,6 +14,9 @@ import { demoState, wpIsBroken } from './state';
 const day = 86_400_000;
 const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * day).toISOString().slice(0, 10);
 const dt = (offsetMin: number) => new Date(Date.now() + offsetMin * 60_000).toISOString().replace('T', ' ').slice(0, 19);
+
+/** Clientul WHMCS de test pentru livrarea e-mailurilor (demo). */
+export const DEMO_TEST_CLIENT = 9001;
 
 // =============================================================================== WHMCS
 
@@ -65,6 +72,18 @@ function makeTickets(): DemoTicket[] {
 
 export class DemoWhmcs implements WhmcsApi {
   private tickets = makeTickets();
+  /** E-mailurile trimise prin WHMCS în demo (reamintiri, teste de livrare). */
+  readonly sentEmails: Array<{ clientId: number; subject: string; message: string; at: number }> = [];
+
+  async sendEmail(params: { clientId: number; subject: string; message: string }) {
+    this.sentEmails.push({ ...params, at: Date.now() });
+    // e-mailul de test ajunge în căsuța de monitorizare după câteva secunde
+    if (params.clientId === DEMO_TEST_CLIENT) demoState.mailboxInbox.push({ subject: params.subject, at: Date.now() + 3000 });
+  }
+
+  async addClient() {
+    return DEMO_TEST_CLIENT;
+  }
 
   async call<T>(action: string): Promise<T> {
     throw new IntegrationError('WHMCS', `Acțiunea ${action} nu e disponibilă în modul demo.`);
@@ -213,7 +232,7 @@ export class DemoWhmcs implements WhmcsApi {
     return {
       total: 3,
       orders: [
-        { id: 3301, number: '8812734', clientId: 3, clientName: 'Ion Vasilescu', date: dt(-120), amount: 1490, status: 'Pending', paymentStatus: 'Unpaid', paymentMethod: 'Card' },
+        { id: 3301, number: '8812734', clientId: 3, clientName: 'Ion Vasilescu', date: dt(-30 * 60), amount: 1490, status: 'Pending', paymentStatus: 'Unpaid', paymentMethod: 'Card' },
         { id: 3300, number: '8812701', clientId: 1, clientName: 'Andrei Popescu', date: dt(-3 * 1440), amount: 59, status: 'Active', paymentStatus: 'Paid', paymentMethod: 'Transfer bancar' },
         { id: 3299, number: '8812655', clientId: 2, clientName: 'Maria Ionescu', date: dt(-9 * 1440), amount: 149, status: 'Active', paymentStatus: 'Paid', paymentMethod: 'Card' },
       ],
@@ -277,9 +296,42 @@ function initialFiles(): Map<string, Buffer> {
   return f;
 }
 
+/** Un backup DirectAdmin simulat, dar real ca format (tar.gz cu bazele de date și site-urile). */
+export function demoBackupArchive(): Buffer {
+  const filler = Buffer.alloc(96 * 1024, 7);
+  return gzipSync(
+    createTar([
+      { name: 'backup', dir: true },
+      { name: 'backup/user.conf', data: 'username=datix\npackage=hosting-business\n' },
+      { name: 'backup/datix_wp.conf', data: 'db_collation=utf8mb4_unicode_ci\n' },
+      { name: 'backup/datix_wp.sql', data: '-- DAX demo\nCREATE TABLE wp_options (option_id int);\n' },
+      { name: 'backup/datix_whmcs.sql', data: '-- DAX demo\nCREATE TABLE tblclients (id int);\n' },
+      { name: 'domains/datix.ro/public_html/wp-config.php', data: "<?php define('DB_NAME', 'datix_wp');" },
+      { name: 'domains/datix.ro/public_html/wp-content/uploads/2026/09/hero.jpg', data: filler },
+      { name: 'domains/my.datix.ro/public_html/configuration.php', data: "<?php $db_name = 'datix_whmcs';" },
+    ]),
+  );
+}
+
 export class DemoDirectAdmin implements DirectAdminApi {
   readonly label = 'DirectAdmin (demo)';
   private files = initialFiles();
+
+  constructor() {
+    this.files.set('/backups/backup-Sep.28.2026-03.00.datix.tar.gz', demoBackupArchive());
+  }
+
+  async downloadToFile(path: string, dest: string) {
+    const content = await this.downloadFile(path);
+    await writeFile(dest, content);
+    return { bytes: content.length, sha256: createHash('sha256').update(content).digest('hex') };
+  }
+
+  async removePermanently(paths: string[]) {
+    for (const p of paths) this.files.delete(p);
+  }
+
+  async createEmailAccount() {}
 
   asUser(_user: string): DirectAdminApi {
     return this;
@@ -420,7 +472,8 @@ export class DemoDirectAdmin implements DirectAdminApi {
   }
 
   async createBackup() {
-    this.files.set(`/backups/backup-${new Date().toISOString().slice(0, 10)}.datix.tar.gz`, Buffer.from('BINARY\u0000demo'));
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13);
+    this.files.set(`/backups/backup-${stamp}.datix.tar.gz`, demoBackupArchive());
     return { result: 'Backup pornit (demo).' };
   }
 
@@ -542,7 +595,7 @@ export class DemoWordPress implements WordPressApi {
     { file: 'litespeed-cache/litespeed-cache.php', slug: 'litespeed-cache', name: 'LiteSpeed Cache', version: '7.0', active: true, update: null, auto_update: true },
     { file: 'wordpress-seo/wp-seo.php', slug: 'wordpress-seo', name: 'Yoast SEO', version: '24.1', active: true, update: null, auto_update: true },
     { file: 'akismet/akismet.php', slug: 'akismet', name: 'Akismet Anti-spam', version: '5.3.5', active: false, update: null, auto_update: false },
-    { file: 'dax-connector/dax-connector.php', slug: 'dax-connector', name: 'DAX Connector', version: '1.0.0', active: true, update: null, auto_update: false },
+    { file: 'dax-connector/dax-connector.php', slug: 'dax-connector', name: 'DAX Connector', version: '1.1.0', active: true, update: null, auto_update: false },
   ];
 
   private ensureUp() {
@@ -572,7 +625,7 @@ export class DemoWordPress implements WordPressApi {
       memory_limit: '256M',
       cache_plugins: ['LiteSpeed Cache'],
       maintenance: demoState.maintenance,
-      connector_version: '1.0.0',
+      connector_version: '1.1.0',
     };
   }
 
@@ -596,6 +649,8 @@ export class DemoWordPress implements WordPressApi {
       const from = p.version;
       p.version = p.update!;
       p.update = null;
+      // scenariul demo: noua versiune Elementor „strică” site-ul, ca să se vadă revenirea automată
+      if (p.slug === 'elementor') demoState.updateFault = 'elementor';
       return { item: p.file, ok: true, message: 'Actualizat', from, to: p.version };
     });
     return { results: results.length ? results : [{ item: type, ok: true, message: 'Nimic de actualizat' }] };
@@ -646,5 +701,70 @@ export class DemoWordPress implements WordPressApi {
   async hardening(opts: { disable_xmlrpc?: boolean; block_user_enum?: boolean; disable_file_edit?: boolean }) {
     this.ensureUp();
     return { disable_xmlrpc: !!opts.disable_xmlrpc, block_user_enum: !!opts.block_user_enum, disable_file_edit: !!opts.disable_file_edit };
+  }
+
+  async integrityCore() {
+    this.ensureUp();
+    return { scope: 'core' as const, version: '6.8.3', ok: true, checked: 1932, modified: [], missing: [], unknown: [] };
+  }
+
+  async integrityPlugins() {
+    this.ensureUp();
+    return {
+      scope: 'plugins' as const,
+      total: this.pluginList.length,
+      next: null,
+      results: this.pluginList.map((p) => ({
+        file: p.file,
+        slug: p.slug,
+        name: p.name,
+        version: p.version,
+        status: p.slug === 'dax-connector' ? ('unverifiable' as const) : ('ok' as const),
+        checked: p.slug === 'dax-connector' ? 0 : 40,
+        modified: [],
+        added: [],
+        missing: [],
+        message: p.slug === 'dax-connector' ? 'Conectorul DAX e verificat separat de agent.' : null,
+      })),
+    };
+  }
+
+  async integrityUploads() {
+    this.ensureUp();
+    return { scope: 'uploads' as const, php_files: [] };
+  }
+
+  async reinstall(type: 'plugin' | 'core', item?: string) {
+    const p = this.pluginList.find((x) => x.file === item);
+    return { ok: true, message: 'Reinstalat din sursa oficială (demo).', version: type === 'core' ? '6.8.3' : p?.version };
+  }
+
+  async snapshot(run: string, items: WpSnapshotItem[], db: boolean) {
+    const saved: Record<string, string> = { ...(demoState.snapshots.get(run) ?? {}) };
+    const out = items.map((it) => {
+      const p = this.pluginList.find((x) => x.file === it.item);
+      if (p) saved[it.item] = p.version;
+      return { ...it, ok: true, bytes: 2_400_000, version: p?.version ?? '4.8.1' };
+    });
+    demoState.snapshots.set(run, saved);
+    return { dir: `../dax-snapshots/${run}`, items: out, db: db ? { ok: true, tables: 12, rows: 4810, bytes: 1_850_000 } : null };
+  }
+
+  async rollback(run: string, items: WpSnapshotItem[], opts: { db?: boolean; coreVersion?: string } = {}) {
+    const saved = demoState.snapshots.get(run) ?? {};
+    const out = items.map((it) => {
+      const p = this.pluginList.find((x) => x.file === it.item);
+      const version = saved[it.item];
+      if (!p || !version) return { ...it, ok: false, message: 'Nu există copie pentru acest element.' };
+      if (p.version !== version) p.update = p.version;
+      p.version = version;
+      if (demoState.updateFault === p.slug) demoState.updateFault = null;
+      return { ...it, ok: true, version, message: `Revenit la ${version}.` };
+    });
+    return { items: out, db: opts.db ? { ok: true, message: 'Baza de date a fost restaurată.' } : null, core: opts.coreVersion ? { ok: true, message: `Nucleul ${opts.coreVersion} a fost instalat.` } : null };
+  }
+
+  async snapshotsCleanup(keep = 3) {
+    return { removed: [], kept: keep };
   }
 }

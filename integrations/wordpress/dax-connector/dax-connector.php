@@ -3,7 +3,7 @@
  * Plugin Name:       DAX Connector
  * Plugin URI:        https://datix.ro
  * Description:       Conectează site-ul la agentul DAX: stare, actualizări, securitate, mod mentenanță și jurnal de evenimente. Fiecare cerere a agentului este semnată (HMAC-SHA256) și verificată.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 5.8
  * Requires PHP:      7.2
  * Author:            Datix
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('DAX_CONNECTOR_VERSION', '1.0.0');
+define('DAX_CONNECTOR_VERSION', '1.1.0');
 define('DAX_CONNECTOR_FILE', __FILE__);
 define('DAX_CONNECTOR_DIR', plugin_dir_path(__FILE__));
 
@@ -34,6 +34,7 @@ require_once DAX_CONNECTOR_DIR . 'includes/class-dax-auth.php';
 require_once DAX_CONNECTOR_DIR . 'includes/class-dax-events.php';
 require_once DAX_CONNECTOR_DIR . 'includes/class-dax-protect.php';
 require_once DAX_CONNECTOR_DIR . 'includes/class-dax-audit.php';
+require_once DAX_CONNECTOR_DIR . 'includes/class-dax-maint.php';
 require_once DAX_CONNECTOR_DIR . 'includes/class-dax-api.php';
 
 register_activation_hook(__FILE__, 'dax_connector_activate');

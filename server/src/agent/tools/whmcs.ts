@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineTool, OPS, OWNER_ONLY, READ_EVERYWHERE, ToolFailure } from './types';
+import { defineTool, OPS, OWNER_ONLY, OWNER_REPORTS, READ_EVERYWHERE, ToolFailure } from './types';
 import { needWhmcs } from './helpers';
 import { truncate } from '../../util/text';
 
@@ -64,7 +64,7 @@ export const whmcsTools = [
     description: 'Indicatori din WHMCS: încasări (azi, luna, anul), comenzi, tichete, anulări în așteptare, plus evoluția zilnică pe ultimele N zile.',
     schema: z.object({ days: z.number().int().min(1).max(365).default(30) }),
     risk: 'read',
-    contexts: ['owner', 'report'],
+    contexts: OWNER_REPORTS,
     requires: ['whmcs'],
     async execute(a, ctx) {
       return needWhmcs(ctx).getStats(a.days);
@@ -76,7 +76,7 @@ export const whmcsTools = [
     description: 'Facturile neplătite sau restante (Unpaid / Overdue).',
     schema: z.object({ status: z.enum(['Unpaid', 'Overdue']).default('Unpaid'), limit: z.number().int().min(1).max(100).default(30) }),
     risk: 'read',
-    contexts: ['owner', 'report'],
+    contexts: OWNER_REPORTS,
     requires: ['whmcs'],
     async execute(a, ctx) {
       return needWhmcs(ctx).getInvoices({ status: a.status, limitnum: a.limit });
@@ -88,7 +88,7 @@ export const whmcsTools = [
     description: 'Comenzile recente din WHMCS (opțional filtrate după status: Pending, Active, Fraud, Cancelled).',
     schema: z.object({ status: z.string().optional(), limit: z.number().int().min(1).max(100).default(20) }),
     risk: 'read',
-    contexts: ['owner', 'report'],
+    contexts: OWNER_REPORTS,
     requires: ['whmcs'],
     async execute(a, ctx) {
       return needWhmcs(ctx).getOrders({ status: a.status, limitnum: a.limit });

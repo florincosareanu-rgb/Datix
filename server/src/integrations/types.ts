@@ -11,6 +11,9 @@ import type { securityScan } from './net/securityScan';
 import type { fetchPublicPage } from './net/ssrf';
 import type { runPageSpeed } from './pagespeed';
 import type { checkComponent } from './wpvuln';
+import type { MailboxClient } from './mailbox';
+import type { AnafClient } from './anaf';
+import type { SearchConsoleClient } from './gsc';
 
 /** API-ul public al unei clase (fără câmpuri private) — permite implementări demo. */
 export type PublicApi<T> = { [K in keyof T]: T[K] };
@@ -19,6 +22,9 @@ export type WhmcsApi = PublicApi<WhmcsClient>;
 export type DirectAdminApi = PublicApi<DirectAdminClient>;
 export type CloudflareApi = PublicApi<CloudflareClient>;
 export type WordPressApi = PublicApi<WordPressConnector>;
+export type MailboxApi = PublicApi<MailboxClient>;
+export type AnafApi = PublicApi<AnafClient>;
+export type GscApi = PublicApi<SearchConsoleClient>;
 
 export interface NetApi {
   http: typeof httpCheck;

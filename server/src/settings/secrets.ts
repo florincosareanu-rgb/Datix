@@ -15,12 +15,23 @@ export const SECRET_KEYS = [
   'wordpress.secret',
   'pagespeed.apiKey',
   'push.vapidPrivateKey',
+  'storage.accessKeyId',
+  'storage.secretAccessKey',
+  'backup.passphrase',
+  'mailbox.password',
+  'anaf.clientSecret',
+  'anaf.accessToken',
+  'anaf.refreshToken',
+  'gsc.serviceAccount',
 ] as const;
 
 export type SecretKey = (typeof SECRET_KEYS)[number];
 
 /** Secrete generate de aplicație, pe care proprietarul le copiază în WordPress / WHMCS. */
-export const GENERATED_SECRETS: SecretKey[] = ['whmcs.webhookSecret', 'wordpress.secret'];
+export const GENERATED_SECRETS: SecretKey[] = ['whmcs.webhookSecret', 'wordpress.secret', 'backup.passphrase'];
+
+/** Secrete gestionate intern (tokenuri obținute automat): nu se setează din interfață. */
+export const INTERNAL_SECRETS: SecretKey[] = ['push.vapidPrivateKey', 'anaf.accessToken', 'anaf.refreshToken'];
 
 /** Variabile de mediu acceptate ca alternativă (utile la instalări automate). */
 const ENV_FALLBACK: Partial<Record<SecretKey, string>> = {
@@ -33,6 +44,9 @@ const ENV_FALLBACK: Partial<Record<SecretKey, string>> = {
   'cloudflare.apiToken': 'CLOUDFLARE_API_TOKEN',
   'wordpress.secret': 'WP_CONNECTOR_SECRET',
   'pagespeed.apiKey': 'PAGESPEED_API_KEY',
+  'storage.accessKeyId': 'BACKUP_S3_ACCESS_KEY_ID',
+  'storage.secretAccessKey': 'BACKUP_S3_SECRET_ACCESS_KEY',
+  'backup.passphrase': 'BACKUP_PASSPHRASE',
 };
 
 export function isSecretKey(key: string): key is SecretKey {

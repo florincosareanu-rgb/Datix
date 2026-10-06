@@ -80,6 +80,11 @@ export class Notifier {
         return n.security;
       case 'report':
         return n.dailyReport;
+      case 'business':
+        return n.business;
+      case 'maintenance':
+        return n.maintenance;
+      case 'mission':
       case 'system':
         return true;
     }

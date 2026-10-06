@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { IntegrationKey, SettingsResponseDTO } from '@datix/shared';
 import type { Services } from '../../services';
 import { HttpError, parse, requireAuth, requireStepUp, clientIp } from '../context';
-import { GENERATED_SECRETS, isSecretKey } from '../../settings/secrets';
+import { GENERATED_SECRETS, INTERNAL_SECRETS, isSecretKey } from '../../settings/secrets';
 import { SettingsValidationError } from '../../settings/service';
 
 export function settingsResponse(s: Services): SettingsResponseDTO {
@@ -45,7 +45,7 @@ export function settingsRoutes(app: FastifyInstance, s: Services) {
   app.put('/api/settings/secrets/:key', async (req) => {
     requireStepUp(req, s);
     const { key } = req.params as { key: string };
-    if (!isSecretKey(key) || key === 'push.vapidPrivateKey') throw new HttpError(404, 'Cheie necunoscută.');
+    if (!isSecretKey(key) || INTERNAL_SECRETS.includes(key)) throw new HttpError(404, 'Cheie necunoscută.');
     const body = parse(z.object({ value: z.string().min(1).max(4000) }), req.body);
     s.secrets.set(key, body.value);
     s.monitoring.syncBuiltin();
@@ -57,7 +57,7 @@ export function settingsRoutes(app: FastifyInstance, s: Services) {
   app.delete('/api/settings/secrets/:key', async (req) => {
     requireStepUp(req, s);
     const { key } = req.params as { key: string };
-    if (!isSecretKey(key) || key === 'push.vapidPrivateKey') throw new HttpError(404, 'Cheie necunoscută.');
+    if (!isSecretKey(key) || INTERNAL_SECRETS.includes(key)) throw new HttpError(404, 'Cheie necunoscută.');
     s.secrets.delete(key);
     s.monitoring.syncBuiltin();
     s.audit.log({ actor: 'owner', action: 'secret.deleted', target: key, ip: clientIp(req) });
@@ -84,7 +84,7 @@ export function settingsRoutes(app: FastifyInstance, s: Services) {
   app.post('/api/integrations/:key/test', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req) => {
     requireAuth(req, s);
     const { key } = req.params as { key: string };
-    const keys: IntegrationKey[] = ['llm', 'whmcs', 'directadmin', 'reseller', 'cloudflare', 'wordpress', 'pagespeed'];
+    const keys: IntegrationKey[] = ['llm', 'whmcs', 'directadmin', 'reseller', 'cloudflare', 'wordpress', 'pagespeed', 'storage', 'mailbox', 'anaf', 'gsc'];
     if (!keys.includes(key as IntegrationKey)) throw new HttpError(404, 'Integrare necunoscută.');
     const r = await s.integrations.test(key as IntegrationKey);
     if (r.ok) s.monitoring.syncBuiltin();

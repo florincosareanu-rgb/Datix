@@ -74,4 +74,40 @@ export const INTEGRATION_LABEL: Record<string, string> = {
   cloudflare: 'Cloudflare',
   wordpress: 'WordPress (plugin DAX)',
   pagespeed: 'Google PageSpeed',
+  storage: 'Stocare backup (S3 / R2)',
+  mailbox: 'Căsuța de monitorizare (IMAP)',
+  anaf: 'ANAF e-Factura (SPV)',
+  gsc: 'Google Search Console',
+};
+
+export const EFACTURA_TYPE_LABEL: Record<string, string> = {
+  sent: 'Factură trimisă',
+  received: 'Factură primită',
+  error: 'Factură respinsă',
+  buyer_message: 'Mesaj de la cumpărător',
+  other: 'Alt mesaj',
+};
+
+export const REMINDER_KIND_LABEL: Record<string, string> = {
+  invoice: 'Factură restantă',
+  order: 'Comandă neterminată',
+  domain: 'Domeniu care expiră',
+};
+
+export const UPDATE_RESULT_LABEL: Record<string, string> = {
+  pending: 'În așteptare',
+  updated: 'Actualizat',
+  rolled_back: 'Revenit la versiunea anterioară',
+  failed: 'Eșuat',
+  skipped: 'Sărit',
+};
+
+export const WEEKDAY_LABEL: Record<number, string> = {
+  1: 'luni',
+  2: 'marți',
+  3: 'miercuri',
+  4: 'joi',
+  5: 'vineri',
+  6: 'sâmbătă',
+  7: 'duminică',
 };

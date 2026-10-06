@@ -66,6 +66,21 @@ export function sanitizeRecord<T extends Raw>(obj: T): Raw {
   return out;
 }
 
+const escapeHtml = (v: string) => v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/** Text simplu → HTML pentru e-mail (paragrafe, rânduri noi, linkuri). */
+export function textToEmailHtml(text: string): string {
+  return text
+    .trim()
+    .split(/\n{2,}/)
+    .map((para) =>
+      `<p>${escapeHtml(para)
+        .replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, '<a href="$1">$1</a>')
+        .replace(/\n/g, '<br>')}</p>`,
+    )
+    .join('\n');
+}
+
 export class WhmcsClient {
   private readonly endpoint: string;
 
@@ -382,6 +397,41 @@ export class WhmcsClient {
       ip: str(e.ipaddress) || null,
       clientId: num(e.clientId ?? e.userid),
     }));
+  }
+
+  /**
+   * Trimite un e-mail unui client prin WHMCS (apare și în istoricul de e-mailuri al clientului).
+   * Textul simplu e transformat în HTML; antetul și subsolul vin din șablonul general al WHMCS.
+   */
+  async sendEmail(params: { clientId: number; subject: string; message: string }): Promise<void> {
+    await this.call('SendEmail', {
+      customtype: 'general',
+      id: params.clientId,
+      customsubject: params.subject,
+      custommessage: textToEmailHtml(params.message),
+    });
+  }
+
+  /** Creează un client (folosit pentru clientul de test al livrării e-mailurilor). Nu trimite e-mail de bun venit. */
+  async addClient(params: { firstname: string; lastname: string; email: string; companyname?: string; password: string }): Promise<number> {
+    const d = await this.call<{ clientid?: number | string }>('AddClient', {
+      firstname: params.firstname,
+      lastname: params.lastname,
+      companyname: params.companyname,
+      email: params.email,
+      address1: 'Test',
+      city: 'Test',
+      state: 'Test',
+      postcode: '000000',
+      country: 'RO',
+      phonenumber: '0700000000',
+      password2: params.password,
+      skipvalidation: true,
+      noemail: true,
+    });
+    const id = num(d.clientid);
+    if (!id) throw new IntegrationError(SERVICE, 'AddClient nu a întors ID-ul clientului.');
+    return id;
   }
 
   async getAdminUsers() {

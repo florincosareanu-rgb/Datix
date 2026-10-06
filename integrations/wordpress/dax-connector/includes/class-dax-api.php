@@ -45,6 +45,11 @@ final class DAX_API
             '/cache/purge' => 'purge_cache',
             '/debug-log' => 'debug_log',
             '/hardening' => 'hardening',
+            '/integrity' => 'integrity',
+            '/reinstall' => 'reinstall',
+            '/updates/snapshot' => 'snapshot',
+            '/updates/rollback' => 'rollback',
+            '/updates/cleanup' => 'snapshot_cleanup',
         );
     }
 
@@ -446,6 +451,33 @@ final class DAX_API
         $messages = method_exists($skin, 'get_upgrade_messages') ? $skin->get_upgrade_messages() : array();
         $messages = array_map('wp_strip_all_tags', (array) $messages);
         return $messages ? implode(' ', array_slice($messages, -3)) : 'Actualizarea a eșuat.';
+    }
+
+    // ---------------------------------------------------------------- integritate, copii de siguranță (DAX_Maint)
+
+    public static function integrity($params)
+    {
+        return DAX_Maint::integrity($params);
+    }
+
+    public static function reinstall($params)
+    {
+        return DAX_Maint::reinstall($params);
+    }
+
+    public static function snapshot($params)
+    {
+        return DAX_Maint::snapshot($params);
+    }
+
+    public static function rollback($params)
+    {
+        return DAX_Maint::rollback($params);
+    }
+
+    public static function snapshot_cleanup($params)
+    {
+        return DAX_Maint::cleanup($params);
     }
 
     // ---------------------------------------------------------------- securitate

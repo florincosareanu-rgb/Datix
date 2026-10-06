@@ -21,6 +21,14 @@ import type { KnowledgeBase } from './knowledge/kb';
 import type { MemoryStore } from './knowledge/memory';
 import type { FileBackupStore } from './knowledge/fileBackups';
 import type { BusinessService } from './monitoring/business';
+import type { MissionService } from './missions/service';
+import type { CollectionsService } from './business/collections';
+import type { ChurnService } from './business/churn';
+import type { EfacturaService } from './business/efactura';
+import type { SeoService } from './business/seo';
+import type { BackupService } from './backups/service';
+import type { UpdatesService } from './maintenance/updates';
+import type { EmailMonitor } from './maintenance/email';
 
 /** Containerul serviciilor aplicației (injectare simplă de dependențe). */
 export interface Services {
@@ -47,4 +55,12 @@ export interface Services {
   memory: MemoryStore;
   fileBackups: FileBackupStore;
   business: BusinessService;
+  missions: MissionService;
+  collections: CollectionsService;
+  churn: ChurnService;
+  efactura: EfacturaService;
+  seo: SeoService;
+  backups: BackupService;
+  updates: UpdatesService;
+  email: EmailMonitor;
 }

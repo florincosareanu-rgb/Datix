@@ -135,6 +135,59 @@ function summarize(calls: Array<{ name: string; result: string }>): string {
         parts.push(`### Viteză (${d.strategy})\nPerformanță **${d.scores.performance}/100**, SEO ${d.scores.seo}/100.\n${d.opportunities.map((o) => `- ${o.title}`).join('\n')}`);
         break;
       }
+      case 'mission_create': {
+        const d = data as { title: string; schedule: string; nextRunAt: string | null };
+        parts.push(`### Misiune programată ✅\n**${d.title}** — ${d.schedule}.${d.nextRunAt ? ` Prima rulare: ${new Date(d.nextRunAt).toLocaleString('ro-RO', { timeZone: 'Europe/Bucharest' })}.` : ''}\nÎți trimit rezultatul ca notificare; o poți modifica oricând din **Misiuni**.`);
+        break;
+      }
+      case 'mission_list': {
+        const list = (data as Array<{ title: string; schedule: string; enabled: boolean }>) ?? [];
+        parts.push(list.length ? `### Misiunile tale\n${list.map((m) => `- **${m.title}** — ${m.schedule}${m.enabled ? '' : ' (pe pauză)'}`).join('\n')}` : 'Nu ai încă misiuni programate. Spune-mi, de exemplu: „În fiecare luni la 9 trimite-mi facturile restante”.');
+        break;
+      }
+      case 'backup_status': {
+        const d = data as { lastOk: { at: string; size: string; encrypted: boolean } | null; destination: string; message: string | null };
+        parts.push(d.lastOk ? `### Backup\nUltima copie verificată: **${new Date(d.lastOk.at).toLocaleString('ro-RO', { timeZone: 'Europe/Bucharest' })}**, ${d.lastOk.size}${d.lastOk.encrypted ? ', criptată' : ''}, păstrată pe ${d.destination}. ✅` : `### Backup\n${d.message ?? 'Încă nu există o copie verificată.'}`);
+        break;
+      }
+      case 'updates_status': {
+        const d = data as { pending: Array<{ name: string; from: string | null; to: string | null; excluded: boolean }>; mode: string };
+        parts.push(d.pending.length ? `### Actualizări WordPress\n${d.pending.map((u) => `- **${u.name}** ${u.from ?? ''} → ${u.to ?? ''}${u.excluded ? ' _(exclus)_' : ''}`).join('\n')}\n\nLe pot aplica sigur: copie înainte, verificare după fiecare pas și revenire automată.` : '### Actualizări WordPress\nTotul e la zi. ✅');
+        break;
+      }
+      case 'wp_check_integrity': {
+        const d = data as { ok: boolean; message: string };
+        parts.push(`### Integritatea fișierelor\n${d.ok ? '✅ ' : '🚨 '}${d.message}`);
+        break;
+      }
+      case 'collections_overview': {
+        const d = data as { totals: { overdueInvoices: number; overdueAmountText: string; pendingOrders: number; expiringDomains: number }; reminders: Array<{ kind: string; client: string; amount: string | null; status: string; ref: string }> };
+        const drafts = d.reminders.filter((r) => r.status === 'draft');
+        parts.push(`### De încasat\n- Facturi restante: **${d.totals.overdueInvoices}** (${d.totals.overdueAmountText})\n- Comenzi neterminate: **${d.totals.pendingOrders}**\n- Domenii care expiră: **${d.totals.expiringDomains}**${drafts.length ? `\n\nAm pregătit **${drafts.length} reamintiri** — le verifici și le trimiți din **Business → Încasări**:\n${drafts.map((r) => `- ${r.kind}: ${r.ref} — ${r.client}${r.amount ? `, ${r.amount}` : ''}`).join('\n')}` : ''}`);
+        break;
+      }
+      case 'churn_overview': {
+        const d = data as { clients: Array<{ name: string; level: string; score: number; suggestion: string | null; signals: string[] }> };
+        const risky = d.clients.filter((c) => c.level !== 'low');
+        parts.push(risky.length ? `### Clienți în risc\n${risky.slice(0, 5).map((c) => `- **${c.name}** (scor ${c.score}) — ${c.signals[0] ?? ''}${c.suggestion ? `\n  → _${c.suggestion}_` : ''}`).join('\n')}` : '### Clienți în risc\nNiciun client cu risc ridicat. ✅');
+        break;
+      }
+      case 'efactura_status': {
+        const d = data as { last7days: { sent: number; received: number; errors: number }; errors: Array<{ uploadId: string | null; errors: string[] }> };
+        parts.push(`### e-Factura (ultimele 7 zile)\n- Trimise: **${d.last7days.sent}** · primite: ${d.last7days.received} · respinse: **${d.last7days.errors}**${d.errors.length ? `\n\nUltima respinsă (index ${d.errors[0]!.uploadId}): ${d.errors[0]!.errors[0] ?? ''}` : ''}`);
+        break;
+      }
+      case 'email_delivery_status': {
+        const d = data as { tests: Array<{ status: string; latencySec: number | null }>; dmarc: { messages: number; failed: number } | null };
+        const t = d.tests[0];
+        parts.push(`### Livrarea e-mailurilor\n${t ? (t.status === 'ok' ? `✅ Ultimul test a ajuns în ${t.latencySec ?? '?'} s.` : `⚠️ Ultimul test: ${t.status}.`) : 'Încă niciun test.'}${d.dmarc ? `\nDMARC: ${d.dmarc.messages} mesaje raportate, ${d.dmarc.failed} respinse.` : ''}`);
+        break;
+      }
+      case 'seo_report': {
+        const d = data as { totals?: { clicks: number; clicksPrev: number; impressions: number }; opportunities?: Array<{ key: string; impressions: number; position: number }>; ideas?: Array<{ title: string }>; message?: string };
+        parts.push(d.totals ? `### SEO (ultima săptămână)\n- Clicuri: **${d.totals.clicks}** (anterior ${d.totals.clicksPrev}) · afișări: ${d.totals.impressions}\n${(d.opportunities ?? []).slice(0, 3).map((o) => `- Oportunitate: „${o.key}” — ${o.impressions} afișări, poziția ${o.position}`).join('\n')}${d.ideas?.length ? `\n\nIdei de articole: ${d.ideas.slice(0, 3).map((i) => `„${i.title}”`).join(', ')}.` : ''}` : `### SEO\n${d.message ?? ''}`);
+        break;
+      }
       default:
         parts.push(`Am rulat **${c.name}**.`);
     }
@@ -152,6 +205,25 @@ function ownerScript(req: LlmRequest): ScriptStep {
   const t = normalizeText(user);
   const pick = (...names: Array<[string, Record<string, unknown>]>) => ({ toolCalls: names.filter(([n]) => has(req, n)).map(([name, args]) => ({ name, args })) });
   let step: ScriptStep | null = null;
+  const days: Record<string, number> = { luni: 1, marti: 2, miercuri: 3, joi: 4, vineri: 5, sambata: 6, duminica: 7 };
+  const weekday = Object.entries(days).find(([d]) => new RegExp(`\\b${d}\\b`).test(t))?.[1];
+  if (/in fiecare|zilnic|saptamanal|lunar|programeaza|misiune noua|de acum inainte/.test(t) && has(req, 'mission_create')) {
+    const hm = /\b(\d{1,2})(?::(\d{2}))?\b/.exec(t);
+    const time = hm ? `${hm[1]!.padStart(2, '0')}:${hm[2] ?? '00'}` : '09:00';
+    const task = user.replace(/^(.*?(?:la (?:ora )?\d{1,2}(?::\d{2})?|zilnic|săptămânal|lunar))[,\s]*/i, '').trim() || user;
+    const title = task.split(/\s+/).slice(0, 4).join(' ').replace(/[.,:;!?]+$/, '');
+    step = { toolCalls: [{ name: 'mission_create', args: { title: title.charAt(0).toUpperCase() + title.slice(1), prompt: task, frequency: weekday ? 'weekly' : /lunar/.test(t) ? 'monthly' : 'daily', time, ...(weekday ? { weekdays: [weekday] } : {}), ...(/lunar/.test(t) ? { day_of_month: 1 } : {}) } }] };
+  } else if (/misiuni/.test(t)) step = pick(['mission_list', {}]);
+  else if (/backup|copi(a|e) de siguranta/.test(t)) step = pick(['backup_status', {}]);
+  else if (/actualiz|update/.test(t)) step = pick(['updates_status', {}]);
+  else if (/integritat|fisiere modificate|virus/.test(t)) step = pick(['wp_check_integrity', {}]);
+  else if (/restant|reamint|de incasat|neplatit/.test(t)) step = pick(['collections_overview', {}]);
+  else if (/in risc|pleca|retenti|pierd client/.test(t)) step = pick(['churn_overview', {}]);
+  else if (/e-?factura|anaf|spv/.test(t)) step = pick(['efactura_status', {}]);
+  else if (/livrar|dmarc|e-?mailuri(le)? (ajung|pleaca)/.test(t)) step = pick(['email_delivery_status', {}]);
+  else if (/\bseo\b|google|cautari|search console/.test(t)) step = pick(['seo_report', {}]);
+  if (step?.toolCalls?.length) return step;
+  step = null;
   if (/securit|vulnerab|atac|hack|spart|malware/.test(t)) step = pick(['get_security_findings', {}], ['cf_security_events', { hours: 24 }]);
   else if (/tichet|ticket|suport|client/.test(t)) step = pick(['whmcs_list_tickets', { status: 'awaiting' }]);
   else if (/incas|vanzar|venit|bani|factur|business|comenz|cifre/.test(t)) step = pick(['whmcs_business_stats', { days: 30 }], ['whmcs_unpaid_invoices', { status: 'Unpaid' }]);

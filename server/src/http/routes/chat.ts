@@ -15,7 +15,7 @@ export function chatRoutes(app: FastifyInstance, s: Services) {
 
   app.get('/api/conversations', async (req) => {
     requireAuth(req, s);
-    const q = parse(z.object({ kind: z.enum(['chat', 'incident', 'ticket', 'report']).optional(), q: z.string().max(100).optional() }), req.query);
+    const q = parse(z.object({ kind: z.enum(['chat', 'incident', 'ticket', 'report', 'mission']).optional(), q: z.string().max(100).optional() }), req.query);
     return s.conversations.list({ kind: q.kind, search: q.q });
   });
 

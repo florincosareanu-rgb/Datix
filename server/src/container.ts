@@ -23,8 +23,18 @@ import { ReportService } from './reports/service';
 import { KnowledgeBase } from './knowledge/kb';
 import { MemoryStore } from './knowledge/memory';
 import { FileBackupStore } from './knowledge/fileBackups';
+import { MissionService } from './missions/service';
+import { CollectionsService } from './business/collections';
+import { ChurnService } from './business/churn';
+import { EfacturaService } from './business/efactura';
+import { SeoService } from './business/seo';
+import { BackupService } from './backups/service';
+import { UpdatesService } from './maintenance/updates';
+import { EmailMonitor } from './maintenance/email';
 import { demoNet } from './demo/net';
 import { DemoCloudflare, DemoDirectAdmin, DemoWhmcs, DemoWordPress } from './demo/integrations';
+import { DemoGsc, DemoMailbox, demoAnaf } from './demo/automation';
+import { join } from 'node:path';
 import { MockLlmProvider } from './demo/llm';
 
 /** Construiește toate serviciile în ordinea corectă a dependențelor. */
@@ -38,8 +48,19 @@ export function buildServices(config: Config, log: Logger, db: DB): Services {
     s.settings,
     s.secrets,
     config.demoMode
-      ? { net: demoNet, whmcs: new DemoWhmcs(), directadmin: new DemoDirectAdmin(), reseller: new DemoDirectAdmin(), cloudflare: new DemoCloudflare(), wordpress: new DemoWordPress() }
+      ? {
+          net: demoNet,
+          whmcs: new DemoWhmcs(),
+          directadmin: new DemoDirectAdmin(),
+          reseller: new DemoDirectAdmin(),
+          cloudflare: new DemoCloudflare(),
+          wordpress: new DemoWordPress(),
+          mailbox: new DemoMailbox(),
+          anaf: demoAnaf,
+          gsc: new DemoGsc(),
+        }
       : null,
+    join(config.dataDir, 'offsite-backups'),
   );
   s.llm = new LlmService(db, s.settings, s.secrets, config.demoMode ? new MockLlmProvider() : null);
   s.integrations.setLlmTester(() => s.llm.testConnection());
@@ -57,6 +78,14 @@ export function buildServices(config: Config, log: Logger, db: DB): Services {
   s.kb = new KnowledgeBase(db);
   s.memory = new MemoryStore(db);
   s.fileBackups = new FileBackupStore(db);
+  s.missions = new MissionService(s);
+  s.collections = new CollectionsService(s);
+  s.churn = new ChurnService(s);
+  s.efactura = new EfacturaService(s);
+  s.seo = new SeoService(s);
+  s.backups = new BackupService(s);
+  s.updates = new UpdatesService(s);
+  s.email = new EmailMonitor(s);
 
   // secretele generate de aplicație (pentru WordPress / WHMCS) și cheile pentru notificări push
   s.secrets.ensureGenerated('whmcs.webhookSecret');
@@ -79,7 +108,20 @@ function seedDemo(s: Services): void {
       wordpress: { enabled: true },
     },
     general: { ownerName: 'Florin' },
+    // automatizările, pornite cu date simulate
+    backups: { enabled: true, destination: 'local' },
+    email: { enabled: true, mailbox: 'dax-monitor@datix.ro', imapHost: 'mail.datix.ro', whmcsTestClientId: 9001 },
+    efactura: { enabled: true, cif: '41234567' },
+    seo: { enabled: true, property: 'sc-domain:datix.ro' },
   });
+  s.missions.create(
+    {
+      title: 'Facturi restante',
+      prompt: 'Trimite-mi lista facturilor restante, cu suma totală și cea mai veche scadență.',
+      schedule: { frequency: 'weekly', time: '09:00', weekdays: [1] },
+    },
+    'owner',
+  );
   s.kb.upsert({
     title: 'Pachete de găzduire web',
     tags: ['hosting', 'prețuri'],

@@ -12,6 +12,7 @@ const CONTEXT_LABEL: Record<ApprovalDTO['context'], string> = {
   incident: 'la un incident',
   ticket: 'la un tichet',
   report: 'la un raport',
+  mission: 'într-o misiune programată',
 };
 
 export function ApprovalsPage() {

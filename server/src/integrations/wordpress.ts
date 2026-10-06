@@ -39,6 +39,48 @@ export interface WpPlugin {
   author?: string;
 }
 
+export interface WpCoreIntegrity {
+  scope: 'core';
+  version: string;
+  ok: boolean | null;
+  error?: string;
+  checked?: number;
+  modified: string[];
+  missing: string[];
+  unknown: string[];
+}
+
+export interface WpPluginIntegrity {
+  file: string;
+  slug: string;
+  name: string;
+  version: string;
+  status: 'ok' | 'modified' | 'unverifiable' | 'error';
+  checked: number;
+  modified: string[];
+  added: string[];
+  missing: string[];
+  message: string | null;
+}
+
+export interface WpSnapshotItem {
+  type: 'plugin' | 'theme';
+  item: string;
+}
+
+/** Versiunea minimă a pluginului pentru integritate și actualizări sigure. */
+export const CONNECTOR_MAINT_VERSION = '1.1.0';
+
+export function connectorSupports(version: string | undefined | null, min = CONNECTOR_MAINT_VERSION): boolean {
+  const a = (version ?? '0').split('.').map(Number);
+  const b = min.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((a[i] ?? 0) > (b[i] ?? 0)) return true;
+    if ((a[i] ?? 0) < (b[i] ?? 0)) return false;
+  }
+  return true;
+}
+
 export class WordPressConnector {
   private useQueryRoute = false;
 
@@ -142,5 +184,41 @@ export class WordPressConnector {
 
   hardening(opts: { disable_xmlrpc?: boolean; block_user_enum?: boolean; disable_file_edit?: boolean }) {
     return this.call<Record<string, boolean>>('/hardening', opts);
+  }
+
+  integrityCore() {
+    return this.call<WpCoreIntegrity>('/integrity', { scope: 'core' }, 90_000);
+  }
+
+  integrityPlugins(offset = 0) {
+    return this.call<{ scope: 'plugins'; total: number; results: WpPluginIntegrity[]; next: number | null }>('/integrity', { scope: 'plugins', offset }, 90_000);
+  }
+
+  integrityUploads() {
+    return this.call<{ scope: 'uploads'; php_files: Array<{ path: string; size: number; modified: string }> }>('/integrity', { scope: 'uploads' }, 60_000);
+  }
+
+  reinstall(type: 'plugin' | 'core', item?: string) {
+    return this.call<{ ok: boolean; message: string; version?: string }>('/reinstall', { type, item }, 300_000);
+  }
+
+  snapshot(run: string, items: WpSnapshotItem[], db: boolean) {
+    return this.call<{
+      dir: string;
+      items: Array<WpSnapshotItem & { ok: boolean; bytes?: number; version?: string; message?: string }>;
+      db: { ok: boolean; tables?: number; rows?: number; bytes?: number; message?: string } | null;
+    }>('/updates/snapshot', { run, items, db }, 300_000);
+  }
+
+  rollback(run: string, items: WpSnapshotItem[], opts: { db?: boolean; coreVersion?: string } = {}) {
+    return this.call<{
+      items: Array<WpSnapshotItem & { ok: boolean; version?: string; message?: string }>;
+      db: { ok: boolean; message: string } | null;
+      core: { ok: boolean; message: string } | null;
+    }>('/updates/rollback', { run, items, db: !!opts.db, core_version: opts.coreVersion }, 300_000);
+  }
+
+  snapshotsCleanup(keep = 3) {
+    return this.call<{ removed: string[]; kept: number }>('/updates/cleanup', { keep });
   }
 }

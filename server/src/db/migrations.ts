@@ -380,4 +380,129 @@ CREATE TABLE events_inbox (
 CREATE INDEX idx_events_inbox ON events_inbox(source, event, at);
 `,
   },
+  {
+    version: 2,
+    name: 'automatizari',
+    sql: `
+-- misiuni programate din chat
+CREATE TABLE missions (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  schedule TEXT NOT NULL,
+  allow_changes INTEGER NOT NULL DEFAULT 0,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_by TEXT NOT NULL DEFAULT 'owner',
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  last_run_at INTEGER,
+  last_status TEXT,
+  last_summary TEXT,
+  last_conversation_id TEXT,
+  run_count INTEGER NOT NULL DEFAULT 0
+);
+
+-- reamintiri pregătite pentru clienți (facturi, comenzi, domenii)
+CREATE TABLE reminders (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,
+  ref_id INTEGER NOT NULL,
+  ref_label TEXT NOT NULL,
+  client_id INTEGER NOT NULL,
+  client_name TEXT NOT NULL,
+  client_email TEXT,
+  amount REAL,
+  currency TEXT NOT NULL DEFAULT '',
+  due_date TEXT,
+  days_overdue INTEGER,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  sent_at INTEGER,
+  error TEXT
+);
+CREATE INDEX idx_reminders_ref ON reminders(kind, ref_id, created_at);
+CREATE INDEX idx_reminders_status ON reminders(status, updated_at);
+
+-- analize calculate periodic (clienți în risc, încasări, SEO), ultima versiune contează
+CREATE TABLE insights (
+  kind TEXT NOT NULL,
+  generated_at INTEGER NOT NULL,
+  data TEXT NOT NULL,
+  PRIMARY KEY (kind, generated_at)
+);
+
+CREATE TABLE backup_runs (
+  id TEXT PRIMARY KEY,
+  started_at INTEGER NOT NULL,
+  finished_at INTEGER,
+  status TEXT NOT NULL,
+  trigger TEXT NOT NULL,
+  file TEXT,
+  created_by_dax INTEGER NOT NULL DEFAULT 0,
+  size_bytes INTEGER,
+  sha256 TEXT,
+  destination TEXT,
+  remote_key TEXT,
+  encrypted INTEGER NOT NULL DEFAULT 0,
+  checks TEXT,
+  log TEXT,
+  error TEXT
+);
+CREATE INDEX idx_backup_runs_started ON backup_runs(started_at);
+
+CREATE TABLE update_runs (
+  id TEXT PRIMARY KEY,
+  started_at INTEGER NOT NULL,
+  finished_at INTEGER,
+  status TEXT NOT NULL,
+  trigger TEXT NOT NULL,
+  items TEXT NOT NULL,
+  log TEXT,
+  error TEXT
+);
+CREATE INDEX idx_update_runs_started ON update_runs(started_at);
+
+CREATE TABLE efactura_messages (
+  id TEXT PRIMARY KEY,
+  cif TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  upload_id TEXT,
+  details TEXT,
+  errors TEXT,
+  explanation TEXT,
+  seen_at INTEGER NOT NULL
+);
+CREATE INDEX idx_efactura_created ON efactura_messages(created_at);
+
+CREATE TABLE email_tests (
+  id TEXT PRIMARY KEY,
+  token TEXT NOT NULL,
+  sent_at INTEGER NOT NULL,
+  received_at INTEGER,
+  status TEXT NOT NULL,
+  latency_sec INTEGER,
+  error TEXT
+);
+CREATE INDEX idx_email_tests_sent ON email_tests(sent_at);
+
+CREATE TABLE dmarc_reports (
+  id TEXT PRIMARY KEY,
+  org TEXT NOT NULL,
+  report_id TEXT NOT NULL,
+  domain TEXT,
+  date_begin INTEGER NOT NULL,
+  date_end INTEGER NOT NULL,
+  total INTEGER NOT NULL,
+  passed INTEGER NOT NULL,
+  failed INTEGER NOT NULL,
+  records TEXT NOT NULL,
+  received_at INTEGER NOT NULL
+);
+CREATE INDEX idx_dmarc_end ON dmarc_reports(date_end);
+`,
+  },
 ];

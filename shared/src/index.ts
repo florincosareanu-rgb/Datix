@@ -17,7 +17,7 @@ export const SEVERITY_ORDER: Record<Severity, number> = {
 };
 
 /** Contextul în care rulează agentul. Determină uneltele disponibile și regulile de autonomie. */
-export type AgentContext = 'owner' | 'incident' | 'ticket' | 'report';
+export type AgentContext = 'owner' | 'incident' | 'ticket' | 'report' | 'mission';
 
 /**
  * Nivelul de risc al unei unelte:
@@ -49,7 +49,11 @@ export type MonitorKind =
   | 'business'
   | 'tickets_poll'
   | 'cloudflare_security'
-  | 'reseller_accounts';
+  | 'reseller_accounts'
+  | 'backup'
+  | 'wp_integrity'
+  | 'email_delivery'
+  | 'efactura';
 
 export interface MonitorDTO {
   id: string;
@@ -190,7 +194,7 @@ export interface TicketDetailDTO {
 export interface ConversationDTO {
   id: string;
   title: string;
-  kind: 'chat' | 'incident' | 'ticket' | 'report';
+  kind: 'chat' | 'incident' | 'ticket' | 'report' | 'mission';
   refId: string | null;
   createdAt: number;
   updatedAt: number;
@@ -258,13 +262,16 @@ export type ServerEvent =
   | { type: 'notification'; notification: NotificationDTO }
   | { type: 'chat'; conversationId: string; event: ChatStreamEvent }
   | { type: 'settings_changed' }
+  | { type: 'mission'; mission: MissionDTO }
+  | { type: 'collections_changed' }
+  | { type: 'maintenance_changed'; area: 'backup' | 'updates' | 'email' | 'efactura' | 'seo' }
   | { type: 'ping'; at: number };
 
 // ---------------------------------------------------------------------------
 // Notificări, rapoarte, business, audit
 // ---------------------------------------------------------------------------
 
-export type NotificationKind = 'incident' | 'incident_resolved' | 'approval' | 'ticket' | 'security' | 'report' | 'system';
+export type NotificationKind = 'incident' | 'incident_resolved' | 'approval' | 'ticket' | 'security' | 'report' | 'system' | 'mission' | 'business' | 'maintenance';
 
 export interface NotificationDTO {
   id: string;
@@ -354,7 +361,7 @@ export interface IntegrationStatusDTO {
   lastTestMessage: string | null;
 }
 
-export type IntegrationKey = 'llm' | 'whmcs' | 'directadmin' | 'reseller' | 'cloudflare' | 'wordpress' | 'pagespeed';
+export type IntegrationKey = 'llm' | 'whmcs' | 'directadmin' | 'reseller' | 'cloudflare' | 'wordpress' | 'pagespeed' | 'storage' | 'mailbox' | 'anaf' | 'gsc';
 
 export interface AppSettings {
   general: {
@@ -429,12 +436,73 @@ export interface AppSettings {
     tickets: boolean;
     security: boolean;
     dailyReport: boolean;
+    /** încasări, clienți în risc, e-Factura, SEO */
+    business: boolean;
+    /** backup, actualizări, livrarea e-mailurilor */
+    maintenance: boolean;
     vapidSubject: string;
   };
   reports: {
     dailyAt: string;
     dailyEnabled: boolean;
   };
+  backups: {
+    enabled: boolean;
+    /** ora (HH:MM) la care pornește backup-ul zilnic */
+    time: string;
+    /** DAX cere singur un backup nou în DirectAdmin; altfel verifică doar ultimul existent */
+    createNew: boolean;
+    destination: 'local' | 's3';
+    s3: { endpoint: string; region: string; bucket: string; prefix: string; pathStyle: boolean };
+    /** câte copii se păstrează în afara serverului */
+    retain: number;
+    /** câte backup-uri create de DAX rămân pe hosting (0 = nu șterge nimic de pe hosting) */
+    keepOnServer: number;
+    /** criptare AES-256 compatibilă cu OpenSSL, cu o parolă păstrată de tine */
+    encrypt: boolean;
+  };
+  updates: {
+    mode: 'off' | 'notify' | 'auto';
+    time: string;
+    plugins: boolean;
+    themes: boolean;
+    coreMinor: boolean;
+    coreMajor: boolean;
+    translations: boolean;
+    /** pluginuri (fișierul principal) sau teme care nu se actualizează automat */
+    exclude: string[];
+    /** pagini verificate după fiecare actualizare, pe lângă prima pagină */
+    checkUrls: string[];
+    /** copie a bazei de date WordPress înainte de actualizări */
+    dbSnapshot: boolean;
+  };
+  collections: {
+    enabled: boolean;
+    time: string;
+    /** după câte zile de întârziere pregătește DAX o reamintire personală */
+    overdueDays: number;
+    /** după câte ore o comandă neplătită e considerată abandonată */
+    pendingOrderHours: number;
+    /** domeniile care expiră în atâtea zile */
+    domainDays: number;
+    /** după câte zile se poate pregăti o nouă reamintire pentru același lucru */
+    repeatAfterDays: number;
+  };
+  churn: { enabled: boolean; weekday: number; time: string };
+  integrity: { enabled: boolean };
+  email: {
+    enabled: boolean;
+    /** căsuța folosită pentru test și pentru rapoartele DMARC */
+    mailbox: string;
+    imapHost: string;
+    imapPort: number;
+    testTime: string;
+    /** clientul WHMCS de test (cu adresa căsuței), creat de DAX */
+    whmcsTestClientId: number;
+    dmarc: boolean;
+  };
+  efactura: { enabled: boolean; cif: string; environment: 'prod' | 'test'; clientId: string };
+  seo: { enabled: boolean; property: string; weekday: number; time: string; keyPages: string[] };
 }
 
 export interface SettingsResponseDTO {
@@ -470,3 +538,300 @@ export interface StatusOverviewDTO {
   integrations: IntegrationStatusDTO[];
   overall: 'ok' | 'degraded' | 'down' | 'unknown';
 }
+
+// ---------------------------------------------------------------------------
+// Misiuni programate
+// ---------------------------------------------------------------------------
+
+export type MissionFrequency = 'once' | 'hourly' | 'daily' | 'weekdays' | 'weekly' | 'monthly';
+
+export interface MissionScheduleDTO {
+  frequency: MissionFrequency;
+  /** HH:MM (ora locală) — pentru daily / weekdays / weekly / monthly; minutul pentru hourly */
+  time: string;
+  /** 1 = luni … 7 = duminică (pentru weekly) */
+  weekdays: number[];
+  /** ziua din lună (1–28) pentru monthly */
+  dayOfMonth: number;
+  /** la câte ore (pentru hourly) */
+  everyHours: number;
+  /** momentul exact (ms) pentru once */
+  runAt: number | null;
+}
+
+export interface MissionDTO {
+  id: string;
+  title: string;
+  prompt: string;
+  schedule: MissionScheduleDTO;
+  scheduleText: string;
+  allowChanges: boolean;
+  enabled: boolean;
+  createdBy: 'owner' | 'agent';
+  createdAt: number;
+  updatedAt: number;
+  nextRunAt: number | null;
+  lastRunAt: number | null;
+  lastStatus: 'ok' | 'error' | 'skipped' | null;
+  lastSummary: string | null;
+  lastConversationId: string | null;
+  runCount: number;
+  running: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Încasări și clienți în risc
+// ---------------------------------------------------------------------------
+
+export type ReminderKind = 'invoice' | 'order' | 'domain';
+export type ReminderStatus = 'draft' | 'sent' | 'dismissed' | 'failed' | 'resolved';
+
+export interface ReminderDTO {
+  id: string;
+  kind: ReminderKind;
+  refId: number;
+  refLabel: string;
+  clientId: number;
+  clientName: string;
+  clientEmail: string | null;
+  amount: number | null;
+  /** suma formatată, cu moneda („149,00 RON”) */
+  amountText: string | null;
+  dueDate: string | null;
+  daysOverdue: number | null;
+  subject: string;
+  message: string;
+  status: ReminderStatus;
+  createdAt: number;
+  updatedAt: number;
+  sentAt: number | null;
+  error: string | null;
+}
+
+export interface CollectionsDTO {
+  available: boolean;
+  message: string | null;
+  generatedAt: number | null;
+  currencyPrefix: string;
+  currencySuffix: string;
+  totals: { overdueInvoices: number; overdueAmount: number; pendingOrders: number; pendingAmount: number; expiringDomains: number };
+  reminders: ReminderDTO[];
+}
+
+export interface ChurnSignalDTO {
+  code: string;
+  label: string;
+  weight: number;
+}
+
+export interface ChurnClientDTO {
+  clientId: number;
+  name: string;
+  company: string | null;
+  email: string | null;
+  score: number;
+  level: 'high' | 'medium' | 'low';
+  signals: ChurnSignalDTO[];
+  suggestion: string | null;
+  annualValue: number | null;
+}
+
+export interface ChurnReportDTO {
+  available: boolean;
+  message: string | null;
+  generatedAt: number | null;
+  currencyPrefix: string;
+  currencySuffix: string;
+  totals: { high: number; medium: number; valueAtRisk: number; analyzed: number };
+  clients: ChurnClientDTO[];
+}
+
+// ---------------------------------------------------------------------------
+// Mentenanță: backup, actualizări, e-mail
+// ---------------------------------------------------------------------------
+
+export type BackupRunStatus = 'running' | 'ok' | 'warning' | 'failed';
+
+export interface BackupCheckDTO {
+  label: string;
+  ok: boolean;
+  detail: string | null;
+}
+
+export interface BackupRunDTO {
+  id: string;
+  startedAt: number;
+  finishedAt: number | null;
+  status: BackupRunStatus;
+  trigger: string;
+  file: string | null;
+  sizeBytes: number | null;
+  sha256: string | null;
+  destination: string | null;
+  remoteKey: string | null;
+  encrypted: boolean;
+  checks: BackupCheckDTO[];
+  log: string[];
+  error: string | null;
+}
+
+export interface BackupOverviewDTO {
+  configured: boolean;
+  message: string | null;
+  destinationLabel: string;
+  running: boolean;
+  nextRunAt: number | null;
+  lastOk: BackupRunDTO | null;
+  runs: BackupRunDTO[];
+  stored: Array<{ key: string; sizeBytes: number; at: number }>;
+}
+
+export type UpdateItemResult = 'pending' | 'updated' | 'rolled_back' | 'failed' | 'skipped';
+
+export interface UpdateItemDTO {
+  type: 'plugin' | 'theme' | 'core' | 'translations';
+  item: string;
+  name: string;
+  from: string | null;
+  to: string | null;
+  result: UpdateItemResult;
+  message: string | null;
+}
+
+export interface UpdateRunDTO {
+  id: string;
+  startedAt: number;
+  finishedAt: number | null;
+  status: 'running' | 'ok' | 'rolled_back' | 'failed' | 'nothing' | 'notified';
+  trigger: string;
+  items: UpdateItemDTO[];
+  log: string[];
+  error: string | null;
+}
+
+export interface UpdatesOverviewDTO {
+  available: boolean;
+  message: string | null;
+  running: boolean;
+  nextRunAt: number | null;
+  pending: Array<Pick<UpdateItemDTO, 'type' | 'item' | 'name' | 'from' | 'to'> & { excluded: boolean }>;
+  runs: UpdateRunDTO[];
+}
+
+export interface EmailTestDTO {
+  id: string;
+  sentAt: number;
+  receivedAt: number | null;
+  status: 'waiting' | 'ok' | 'late' | 'missing' | 'error';
+  latencySec: number | null;
+  error: string | null;
+}
+
+export interface DmarcSourceDTO {
+  ip: string;
+  count: number;
+  passed: number;
+  failed: number;
+  spf: string;
+  dkim: string;
+  disposition: string;
+}
+
+export interface DmarcSummaryDTO {
+  periodStart: number;
+  periodEnd: number;
+  reports: number;
+  messages: number;
+  passed: number;
+  failed: number;
+  reporters: string[];
+  sources: DmarcSourceDTO[];
+}
+
+export interface EmailOverviewDTO {
+  configured: boolean;
+  message: string | null;
+  mailbox: string;
+  whmcsTestReady: boolean;
+  tests: EmailTestDTO[];
+  dmarcRecord: string | null;
+  dmarc: DmarcSummaryDTO | null;
+  whmcsFailures24h: number;
+}
+
+// ---------------------------------------------------------------------------
+// e-Factura (ANAF SPV)
+// ---------------------------------------------------------------------------
+
+export type EfacturaMessageType = 'sent' | 'received' | 'error' | 'buyer_message' | 'other';
+
+export interface EfacturaMessageDTO {
+  id: string;
+  createdAt: number;
+  type: EfacturaMessageType;
+  uploadId: string | null;
+  details: string;
+  errors: string[];
+  explanation: string | null;
+}
+
+export interface EfacturaOverviewDTO {
+  configured: boolean;
+  connected: boolean;
+  message: string | null;
+  cif: string;
+  environment: 'prod' | 'test';
+  redirectUri: string;
+  accessExpiresAt: number | null;
+  refreshExpiresAt: number | null;
+  lastCheckAt: number | null;
+  counts7d: { sent: number; received: number; errors: number };
+  messages: EfacturaMessageDTO[];
+}
+
+// ---------------------------------------------------------------------------
+// SEO (Google Search Console)
+// ---------------------------------------------------------------------------
+
+export interface SeoRowDTO {
+  key: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  clicksPrev: number;
+  impressionsPrev: number;
+  positionPrev: number | null;
+}
+
+export interface SeoIdeaDTO {
+  title: string;
+  query: string | null;
+  why: string;
+  outline: string[];
+}
+
+export interface SeoReportDTO {
+  generatedAt: number;
+  property: string;
+  period: { start: string; end: string; prevStart: string; prevEnd: string };
+  totals: { clicks: number; impressions: number; ctr: number; position: number; clicksPrev: number; impressionsPrev: number; ctrPrev: number; positionPrev: number };
+  daily: Array<{ date: string; clicks: number; impressions: number }>;
+  topQueries: SeoRowDTO[];
+  risingQueries: SeoRowDTO[];
+  fallingQueries: SeoRowDTO[];
+  opportunities: SeoRowDTO[];
+  topPages: SeoRowDTO[];
+  fallingPages: SeoRowDTO[];
+  sitemaps: Array<{ path: string; lastSubmitted: string | null; lastDownloaded: string | null; isPending: boolean; errors: number; warnings: number; submitted: number | null; indexed: number | null }>;
+  inspections: Array<{ url: string; verdict: string | null; coverageState: string | null; indexingState: string | null; lastCrawlTime: string | null; robotsTxtState: string | null; googleCanonical: string | null }>;
+  ideas: SeoIdeaDTO[];
+}
+
+export interface SeoOverviewDTO {
+  configured: boolean;
+  message: string | null;
+  report: SeoReportDTO | null;
+  running: boolean;
+}
+

@@ -4,7 +4,7 @@ Tags: monitoring, security, maintenance, ai
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.2
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,9 @@ Pluginul permite agentului DAX să:
 * listeze, activeze și dezactiveze pluginuri și să ruleze actualizări (cu aprobarea ta în aplicație);
 * facă un audit de securitate: integritatea nucleului, fișiere PHP în uploads, fișiere modificate recent, cod malițios cunoscut;
 * păstreze un jurnal de securitate (autentificări, administratori noi, schimbări de rol, pluginuri, teme) și să îți trimită alerte instant;
-* pornească modul mentenanță și să golească cache-ul.
+* pornească modul mentenanță și să golească cache-ul;
+* verifice integritatea fișierelor (nucleul și pluginurile de pe wordpress.org, comparate cu sumele de control oficiale) și să reinstaleze o componentă modificată;
+* facă actualizări sigure: copie a pluginului/temei (și a bazei de date) înainte, revenire automată dacă site-ul se strică.
 
 Securitate:
 
@@ -38,6 +40,10 @@ Alternativ, poți defini cheia în wp-config.php:
     define('DAX_AGENT_URL', 'https://dax.datix.ro');
 
 == Changelog ==
+
+= 1.1.0 =
+* Integritatea fișierelor pluginurilor (sume de control wordpress.org) și reinstalarea din sursa oficială.
+* Copii de siguranță înainte de actualizări (fișiere + baza de date) și revenire automată.
 
 = 1.0.0 =
 * Prima versiune.

@@ -2,7 +2,7 @@ import type { AgentContext, ToolCallDTO } from '@datix/shared';
 import type { Services } from '../services';
 import type { LlmMessage, LlmToolCall, LlmToolSpec } from '../llm/types';
 import { LlmError } from '../llm/types';
-import { decide } from './policy';
+import { decide, type PolicyExtras } from './policy';
 import { systemPrompt } from './prompts';
 import { getTool, toolsFor } from './tools';
 import { toJsonSchema, ToolFailure, type AnyTool } from './tools/types';
@@ -290,6 +290,7 @@ export class AgentRunner {
     signal: AbortSignal,
   ): Promise<boolean> {
     const settings = this.s.settings.get();
+    const extras = this.policyExtras(runId);
     const availableNames = new Set(available.map((t) => t.name));
     let waiting = false;
 
@@ -320,7 +321,7 @@ export class AgentRunner {
         continue;
       }
 
-      const decision = decide(tool, context, settings);
+      const decision = decide(tool, context, settings, extras);
       if (decision.action === 'deny') {
         this.saveToolResult(conversationId, messageId, call, { error: `Nepermis: ${decision.reason}` }, 'error', null, tool);
         continue;
@@ -411,6 +412,13 @@ export class AgentRunner {
     await Promise.all(reads.map(exec));
     for (const w of writes) await exec(w);
     return waiting;
+  }
+
+  /** Misiunile programate pot primi voie să facă singure modificări reversibile. */
+  private policyExtras(runId: string): PolicyExtras {
+    const trigger = this.getRun(runId)?.trigger ?? '';
+    if (trigger.startsWith('mission:')) return { missionAllowsChanges: this.s.missions.allowsChanges(trigger.slice('mission:'.length)) };
+    return {};
   }
 
   private saveToolResult(
